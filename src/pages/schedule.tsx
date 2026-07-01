@@ -2,7 +2,7 @@ import {useCallback, useEffect, useState} from 'react';
 import Shell from '../components/Shell';
 import Avatar from '../components/Avatar';
 import Loading from '../components/Loading';
-import {api, avatarColor} from '../lib/client';
+import {api} from '../lib/client';
 import {WATER_FOUNTAIN_URL} from '../lib/slots';
 import type {ScheduleRow} from './api/schedule';
 
@@ -125,11 +125,9 @@ const SchedulePage = () => {
 
 						{row.kind === 'meeting' && row.meeting && (
 							<a
-								href={`/people/${row.meeting.personId}/`}
-								className='relative block w-full text-left bg-white border border-line rounded-2xl p-3.5 pl-[19px]'
+								href={`/people/${row.meeting.personId}/?from=schedule`}
+								className='block w-full text-left bg-white border border-line rounded-2xl p-3.5'
 							>
-								{/* Accent bar inset from the corners, so the radius doesn't bend it */}
-								<span className='absolute left-1.5 top-3 bottom-3 w-[5px] rounded-full' style={{background: avatarColor(row.meeting.personId)}} />
 								<div className='flex items-center gap-3'>
 									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
 									<div className='flex-1 min-w-0'>
@@ -144,7 +142,7 @@ const SchedulePage = () => {
 
 						{row.kind === 'incoming' && row.meeting && (
 							<div className='bg-tint-soft border-[1.5px] border-brand rounded-2xl p-3.5'>
-								<a href={`/people/${row.meeting.personId}/`} className='flex items-center gap-3'>
+								<a href={`/people/${row.meeting.personId}/?from=schedule`} className='flex items-center gap-3'>
 									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
 									<div className='flex-1 min-w-0'>
 										<div className='font-bold text-[16px]'>{row.meeting.name}</div>
@@ -180,7 +178,7 @@ const SchedulePage = () => {
 
 						{row.kind === 'outgoing' && row.meeting && (
 							<div className='border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[10px] text-[13.5px] text-muted flex items-center justify-between gap-2'>
-								<a href={`/people/${row.meeting.personId}/`} className='flex items-center gap-2'>
+								<a href={`/people/${row.meeting.personId}/?from=schedule`} className='flex items-center gap-2'>
 									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} size='sm' />
 									You asked {row.meeting.firstName} — waiting
 								</a>

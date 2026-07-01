@@ -84,6 +84,7 @@ const Book = () => {
 
 	const {person, rows, existing} = detail;
 	const firstName = person.name.split(' ')[0];
+	const fromSchedule = router.query.from === 'schedule';
 
 	const request = async () => {
 		if (!selected) {
@@ -125,8 +126,8 @@ const Book = () => {
 
 	return (
 		<Shell>
-			<a href='/people/' className='flex items-center gap-2.5 text-lg font-extrabold mb-3'>
-				<span className='text-2xl text-muted leading-none'>‹</span> People
+			<a href={fromSchedule ? '/schedule/' : '/people/'} className='flex items-center gap-2.5 text-lg font-extrabold mb-3'>
+				<span className='text-2xl text-muted leading-none'>‹</span> {fromSchedule ? 'Schedule' : 'People'}
 			</a>
 
 			<div className='bg-white border border-line rounded-2xl p-3.5 mb-3'>

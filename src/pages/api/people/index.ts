@@ -28,8 +28,8 @@ export default withUser((req, res, user) => {
 
 	const people: PersonCard[] = users
 		// The freeAt filter is a booking aid, so it hides anyone unbookable:
-		// busy at that time, or already meeting/asked by you at any time.
-		.filter((u) => (freeAt ? (u.id === user.id ? true : (isFree(u.id, freeAt) && !byOther.get(u.id))) : true))
+		// you, anyone busy then, or anyone you already have a meeting/ask with.
+		.filter((u) => (freeAt ? (u.id !== user.id && isFree(u.id, freeAt) && !byOther.get(u.id)) : true))
 		.map((u) => {
 			const meeting = byOther.get(u.id);
 			return {
