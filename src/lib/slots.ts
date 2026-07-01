@@ -5,8 +5,8 @@
 
 export const EVENT_DATE = '2026-08-01';
 
-/** The meeting point, pinned on the AdamCon map (from the blog post). */
-export const WATER_FOUNTAIN_URL = 'https://www.google.com/maps/d/viewer?mid=1WyIr0tsTFeTqdkjjl6wXg8WCAYCJGd4';
+/** The water fountain's own Google Maps pin. */
+export const WATER_FOUNTAIN_URL = 'https://www.google.com/maps?cid=5471894394802286819';
 export const MEETING_MINUTES = 25;
 
 export const SLOT_TIMES = [
