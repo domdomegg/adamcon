@@ -2,6 +2,7 @@
  * Dev tool: screenshots the running app as a signed-in user.
  * Usage: SESSION=<adamcon_session cookie> BASE=http://localhost:3001 npx tsx scripts/screenshot.ts <outdir>
  */
+/* eslint-disable no-await-in-loop -- pages must be captured one at a time */
 import puppeteer from 'puppeteer-core';
 
 const BASE = process.env.BASE ?? 'http://localhost:3001';

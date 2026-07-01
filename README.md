@@ -23,7 +23,7 @@ In dev, emails aren't sent: they're logged to the console and appended to
 | Var | What |
 |---|---|
 | `APP_ORIGIN` | Public origin used in emailed links, e.g. `https://adamcon.adamjones.me` |
-| `EMAIL_FROM` | Set to enable real sending via Amazon SES (uses default AWS credential chain). Unset = dev outbox |
+| `EMAIL_FROM` | Set to enable real sending via Amazon SES (default credential chain — in-cluster this is workload identity federation, see `infra/README.md`). Unset = dev outbox |
 | `DATA_DIR` | Where `adamcon.db` + `outbox.jsonl` live (default `./data`) |
 | `AIRTABLE_API_KEY` | PAT for the import script (data.records read/write on the AdamCon base) |
 

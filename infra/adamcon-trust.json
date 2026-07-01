@@ -1,0 +1,12 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Effect": "Allow",
+		"Principal": {"Federated": "arn:aws:iam::338337944728:oidc-provider/k8s-oidc.home.adamjones.me"},
+		"Action": "sts:AssumeRoleWithWebIdentity",
+		"Condition": {"StringEquals": {
+			"k8s-oidc.home.adamjones.me:sub": "system:serviceaccount:default:adamcon",
+			"k8s-oidc.home.adamjones.me:aud": "sts.amazonaws.com"
+		}}
+	}]
+}
