@@ -1,5 +1,9 @@
 # adamcon
 
+**Live at https://adamcon.home.adamjones.me** (homelab k3s; image
+`ghcr.io/domdomegg/adamcon` built by CI on every push to master — restart the
+`adamcon` service via the homelab restart workflow to pick up a new image).
+
 The AdamCon '26 one-to-ones app: profiles → directory → request a 25-minute
 meeting → accept/decline → your day's schedule. All meetings start at the water
 fountain. See `../PLAN.md` for the full design (data model, booking rules,
@@ -35,7 +39,4 @@ invited checkbox back in Airtable. Rerun any time for late signups.
 
 ## Before the event
 
-- [ ] Verify the sending domain in SES (DKIM) + request production access (mid-July!)
-- [ ] Point `REGISTRATION_URL` in `src/pages/login.tsx` at the real registration form
-- [ ] Deploy: one block in homelab `appDefinitions.ts` (needs a persistent volume for `DATA_DIR`), set env vars above
 - [ ] Morning-of schedule email (small script over `meetings`, or send manually)
