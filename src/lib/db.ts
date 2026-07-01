@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
 	whatsapp TEXT NOT NULL DEFAULT '',
 	photo_url TEXT NOT NULL DEFAULT '',
 	airtable_record_id TEXT,
-	last_request_nudge_at INTEGER NOT NULL DEFAULT 0,
 	created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
@@ -86,7 +85,6 @@ export type UserRow = {
 	whatsapp: string;
 	photo_url: string;
 	airtable_record_id: string | null;
-	last_request_nudge_at: number;
 	created_at: number;
 };
 

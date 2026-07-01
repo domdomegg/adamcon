@@ -22,16 +22,11 @@ const SAMPLES: Record<string, Template> = {
 		paragraphs: ['Tap the button to sign in to AdamCon. This link is just for you.'],
 		cta: {label: 'Sign in', url: 'https://adamcon.adamjones.me/'},
 	},
-	'3-requests': {
-		heading: '2 people want to meet you',
-		paragraphs: ['You have 2 meeting requests waiting for an answer on your schedule.'],
+	'3-request': {
+		heading: 'Priya Kapoor wants to meet you',
+		paragraphs: ['“Saw you run silly events — I run a community organising tool and think there’s overlap.”'],
+		highlight: '12:00 · Sat 1 Aug',
 		cta: {label: 'Answer on your schedule', url: 'https://adamcon.adamjones.me/schedule/'},
-	},
-	'4-accepted': {
-		heading: 'Tom Okafor accepted',
-		paragraphs: ['Your meeting is booked. A calendar invite is attached.'],
-		highlight: '14:00 · Sat 1 Aug · meet at the water fountain',
-		cta: {label: 'View your schedule', url: 'https://adamcon.adamjones.me/schedule/'},
 	},
 	'5-cancelled': {
 		heading: 'Your 14:00 meeting was cancelled',

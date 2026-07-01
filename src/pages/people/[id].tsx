@@ -29,6 +29,18 @@ const Book = () => {
 	const noteRef = useRef<HTMLTextAreaElement>(null);
 	const preselected = useRef(false);
 
+	const selectSlot = (slotId: number | null) => {
+		setSelected(slotId);
+		if (slotId !== null) {
+			// Glide down to the note and focus it once the scroll has settled,
+			// so mobile keyboards don't cause a jarring double-jump.
+			setTimeout(() => {
+				noteRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'});
+				setTimeout(() => noteRef.current?.focus({preventScroll: true}), 350);
+			}, 50);
+		}
+	};
+
 	const load = useCallback(async () => {
 		if (!router.isReady) {
 			return null;
@@ -52,7 +64,7 @@ const Book = () => {
 			if (data && wanted && !preselected.current) {
 				preselected.current = true;
 				if (data.rows.some((r) => r.slotId === wanted && r.state === 'free')) {
-					setSelected(wanted);
+					selectSlot(wanted);
 				}
 			}
 		}).catch(async () => router.push('/people/'));
@@ -64,18 +76,6 @@ const Book = () => {
 
 	const {person, rows, existing} = detail;
 	const firstName = person.name.split(' ')[0];
-
-	const selectSlot = (slotId: number | null) => {
-		setSelected(slotId);
-		if (slotId !== null) {
-			// Glide down to the note and focus it once the scroll has settled,
-			// so mobile keyboards don't cause a jarring double-jump.
-			setTimeout(() => {
-				noteRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'});
-				setTimeout(() => noteRef.current?.focus({preventScroll: true}), 350);
-			}, 50);
-		}
-	};
 
 	const request = async () => {
 		if (!selected) {

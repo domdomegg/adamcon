@@ -4,6 +4,7 @@ import Shell from '../components/Shell';
 import Avatar from '../components/Avatar';
 import {ChatIcon} from '../components/Icons';
 import {api} from '../lib/client';
+import {WATER_FOUNTAIN_URL} from '../lib/slots';
 import type {ScheduleRow} from './api/schedule';
 
 type Schedule = {rows: ScheduleRow[]; meetings: number; toAnswer: number};
@@ -83,7 +84,7 @@ const SchedulePage = () => {
 			</p>
 
 			<div className='bg-white border border-line rounded-2xl px-3.5 py-3 text-[13.5px] text-muted mb-4'>
-				Every meeting starts at the water fountain — find each other there, then wander.
+				Every meeting starts at <a href={WATER_FOUNTAIN_URL} target='_blank' rel='noreferrer' className='text-brand font-bold'>the water fountain</a> — find each other there, then wander.
 			</div>
 
 			{error && <p className='text-brand-dark text-[13px] mb-3'>{error}</p>}
@@ -182,7 +183,7 @@ const SchedulePage = () => {
 							</div>
 						</div>
 						<div className='h-px bg-line my-3' />
-						<div className='text-[15px] font-bold'>{sheet.time} – {sheet.meeting.endTime} · meet at the water fountain</div>
+						<div className='text-[15px] font-bold'>{sheet.time} – {sheet.meeting.endTime} · meet at <a href={WATER_FOUNTAIN_URL} target='_blank' rel='noreferrer' className='text-brand underline'>the water fountain</a></div>
 						{sheet.meeting.note && <p className='text-[12.5px] text-muted mt-1.5'>“{sheet.meeting.note}”</p>}
 						<div className='flex gap-2 mt-4'>
 							{sheet.meeting.waLink && (

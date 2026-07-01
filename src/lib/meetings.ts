@@ -1,10 +1,8 @@
 import {
 	db, LIVE, type MeetingRow, type UserRow,
 } from './db';
-import {appOrigin, meetingIcs, sendEmail} from './email';
+import {appOrigin, sendEmail} from './email';
 import {slotTime} from './slots';
-
-const NUDGE_SECONDS = 3 * 60 * 60;
 
 const liveIn = `('${LIVE.join('\', \'')}')`;
 
@@ -66,34 +64,25 @@ export const createRequest = (
 	})();
 
 	if (result.ok) {
-		void nudgeTarget(targetId);
+		void notifyTarget(requester, result.meeting);
 	}
 
 	return result;
 };
 
-/** Batched request notification: at most one email per NUDGE_SECONDS covering all unanswered requests. */
-const nudgeTarget = async (targetId: number): Promise<void> => {
-	const target = getUser(targetId);
+const notifyTarget = async (requester: UserRow, meeting: MeetingRow): Promise<void> => {
+	const target = getUser(meeting.target_id);
 	if (!target) {
 		return;
 	}
 
-	const cutoff = Math.floor(Date.now() / 1000) - NUDGE_SECONDS;
-	if (target.last_request_nudge_at > cutoff) {
-		return;
-	}
-
-	const pending = db.prepare(`
-		SELECT COUNT(*) AS n FROM meetings WHERE target_id = ? AND status = 'pending'
-	`).get(targetId) as {n: number};
-	db.prepare('UPDATE users SET last_request_nudge_at = unixepoch() WHERE id = ?').run(targetId);
 	await sendEmail({
 		to: target.email,
-		subject: pending.n === 1 ? 'Someone wants to meet you at AdamCon' : `${pending.n} people want to meet you at AdamCon`,
+		subject: `${requester.name} wants to meet you at AdamCon`,
 		template: {
-			heading: pending.n === 1 ? 'Someone wants to meet you' : `${pending.n} people want to meet you`,
-			paragraphs: [`You have ${pending.n === 1 ? 'a meeting request' : `${pending.n} meeting requests`} waiting for an answer on your schedule.`],
+			heading: `${requester.name} wants to meet you`,
+			paragraphs: meeting.note ? [`“${meeting.note}”`] : [],
+			highlight: `${slotTime(meeting.slot_id)} · Sat 1 Aug`,
 			cta: {label: 'Answer on your schedule', url: `${appOrigin()}/schedule/`},
 		},
 	});
@@ -141,22 +130,9 @@ export const answerRequest = (
 	const target = getUser(meeting.target_id)!;
 	const time = slotTime(meeting.slot_id);
 
-	// Emails only when the other person's day changed. Declines and
-	// withdrawals stay silent by design.
-	if (action === 'accept') {
-		void sendEmail({
-			to: requester.email,
-			subject: `${target.name} accepted — you're on at ${time}`,
-			template: {
-				heading: `${target.name} accepted`,
-				paragraphs: ['Your meeting is booked. A calendar invite is attached.'],
-				highlight: `${time} · Sat 1 Aug · meet at the water fountain`,
-				cta: {label: 'View your schedule', url: `${appOrigin()}/schedule/`},
-			},
-			ics: meetingIcs(meeting.slot_id, requester.name, target.name),
-		});
-	}
-
+	// Emails only for cancellations — your day changed and you may want to
+	// rebook. Accepts show up on the schedule; declines and withdrawals
+	// stay silent by design.
 	if (action === 'cancel') {
 		const other = user.id === requester.id ? target : requester;
 		void sendEmail({
