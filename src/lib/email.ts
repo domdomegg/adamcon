@@ -1,6 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import {EVENT_DATE, slotEnd, slotTime} from './slots';
+import {renderEmailHtml, renderEmailText, type Template} from './emailTemplate';
 
 // Email policy (see PLAN.md): send only when the recipient must act or their
 // day changed. Invite, sign-in link, incoming requests (batched), acceptance
@@ -10,7 +11,7 @@ import {EVENT_DATE, slotEnd, slotTime} from './slots';
 export type Email = {
 	to: string;
 	subject: string;
-	text: string;
+	template: Template;
 	ics?: string;
 };
 
@@ -25,39 +26,65 @@ export const sendEmail = async (email: Email): Promise<void> => {
 	// Dev mode: log and append to a local outbox instead of sending.
 	const dataDir = process.env.DATA_DIR ?? path.join(process.cwd(), 'data');
 	fs.mkdirSync(dataDir, {recursive: true});
-	fs.appendFileSync(path.join(dataDir, 'outbox.jsonl'), `${JSON.stringify({...email, at: new Date().toISOString()})}\n`);
+	fs.appendFileSync(path.join(dataDir, 'outbox.jsonl'), `${JSON.stringify({
+		to: email.to, subject: email.subject, text: renderEmailText(email.template), ics: email.ics, at: new Date().toISOString(),
+	})}\n`);
 
-	console.log(`[email → ${email.to}] ${email.subject}\n${email.text}\n`);
+	console.log(`[email → ${email.to}] ${email.subject}\n${renderEmailText(email.template)}\n`);
 };
 
 const sendViaSes = async (email: Email): Promise<void> => {
-	// Raw MIME so we can attach the .ics on acceptance emails.
+	// Raw MIME: multipart/alternative (text + html), wrapped in
+	// multipart/mixed when there's an .ics attachment.
 	const {SESv2Client, SendEmailCommand} = await import('@aws-sdk/client-sesv2');
 	const client = new SESv2Client({});
-	const boundary = 'adamcon-boundary';
-	const parts = [
+	const alt = 'adamcon-alt';
+	const mixed = 'adamcon-mixed';
+
+	const alternative = [
+		`--${alt}`,
+		'Content-Type: text/plain; charset=UTF-8',
+		'',
+		renderEmailText(email.template),
+		`--${alt}`,
+		'Content-Type: text/html; charset=UTF-8',
+		'',
+		renderEmailHtml(email.template),
+		`--${alt}--`,
+	];
+
+	const headers = [
 		`From: ${FROM}`,
 		`To: ${email.to}`,
 		`Subject: ${email.subject}`,
 		'MIME-Version: 1.0',
-		`Content-Type: multipart/mixed; boundary="${boundary}"`,
-		'',
-		`--${boundary}`,
-		'Content-Type: text/plain; charset=UTF-8',
-		'',
-		email.text,
 	];
-	if (email.ics) {
-		parts.push(
-			`--${boundary}`,
+
+	const parts = email.ics
+		? [
+			...headers,
+			`Content-Type: multipart/mixed; boundary="${mixed}"`,
+			'',
+			`--${mixed}`,
+			`Content-Type: multipart/alternative; boundary="${alt}"`,
+			'',
+			...alternative,
+			`--${mixed}`,
 			'Content-Type: text/calendar; method=REQUEST; charset=UTF-8',
 			'Content-Disposition: attachment; filename="meeting.ics"',
 			'',
 			email.ics,
-		);
-	}
+			`--${mixed}--`,
+			'',
+		]
+		: [
+			...headers,
+			`Content-Type: multipart/alternative; boundary="${alt}"`,
+			'',
+			...alternative,
+			'',
+		];
 
-	parts.push(`--${boundary}--`, '');
 	await client.send(new SendEmailCommand({
 		FromEmailAddress: FROM,
 		Destination: {ToAddresses: [email.to]},

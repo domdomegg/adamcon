@@ -91,7 +91,11 @@ const nudgeTarget = async (targetId: number): Promise<void> => {
 	await sendEmail({
 		to: target.email,
 		subject: pending.n === 1 ? 'Someone wants to meet you at AdamCon' : `${pending.n} people want to meet you at AdamCon`,
-		text: `You have ${pending.n === 1 ? 'a meeting request' : `${pending.n} meeting requests`} waiting on your schedule:\n\n${appOrigin()}/schedule\n`,
+		template: {
+			heading: pending.n === 1 ? 'Someone wants to meet you' : `${pending.n} people want to meet you`,
+			paragraphs: [`You have ${pending.n === 1 ? 'a meeting request' : `${pending.n} meeting requests`} waiting for an answer on your schedule.`],
+			cta: {label: 'Answer on your schedule', url: `${appOrigin()}/schedule/`},
+		},
 	});
 };
 
@@ -143,7 +147,12 @@ export const answerRequest = (
 		void sendEmail({
 			to: requester.email,
 			subject: `${target.name} accepted — you're on at ${time}`,
-			text: `${target.name} accepted your AdamCon meeting request.\n\n${time} on Sat 1 Aug, starting at the water fountain.\n\nYour schedule: ${appOrigin()}/schedule\n`,
+			template: {
+				heading: `${target.name} accepted`,
+				paragraphs: ['Your meeting is booked. A calendar invite is attached.'],
+				highlight: `${time} · Sat 1 Aug · meet at the water fountain`,
+				cta: {label: 'View your schedule', url: `${appOrigin()}/schedule/`},
+			},
 			ics: meetingIcs(meeting.slot_id, requester.name, target.name),
 		});
 	}
@@ -153,7 +162,11 @@ export const answerRequest = (
 		void sendEmail({
 			to: other.email,
 			subject: `Your ${time} AdamCon meeting was cancelled`,
-			text: `${user.name} cancelled your ${time} meeting. The slot is open again if you want to rebook it:\n\n${appOrigin()}/people\n`,
+			template: {
+				heading: `Your ${time} meeting was cancelled`,
+				paragraphs: [`${user.name} cancelled your ${time} meeting. The slot is open again if you want to rebook it.`],
+				cta: {label: 'Find someone for the slot', url: `${appOrigin()}/people/`},
+			},
 		});
 	}
 

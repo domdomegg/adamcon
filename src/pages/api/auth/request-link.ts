@@ -21,7 +21,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 		await sendEmail({
 			to: user.email,
 			subject: 'Your AdamCon sign-in link',
-			text: `Tap to sign in:\n\n${appOrigin()}/api/auth/verify?token=${token}\n`,
+			template: {
+				heading: 'Sign in',
+				paragraphs: ['Tap the button to sign in to AdamCon. This link is just for you.'],
+				cta: {label: 'Sign in', url: `${appOrigin()}/api/auth/verify?token=${token}`},
+			},
 		});
 	}
 

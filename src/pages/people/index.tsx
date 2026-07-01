@@ -98,7 +98,7 @@ const People = () => {
 						{person.isMe || person.status === 'none'
 							? (
 								<Link
-									href={`/people/${person.id}/`}
+									href={person.isMe ? '/profile/' : `/people/${person.id}/${freeAt ? `?slot=${freeAt}` : ''}`}
 									className={`rounded-[10px] px-4 py-2 text-sm font-bold shrink-0 ${person.isMe ? 'bg-stone-100 text-ink' : 'bg-brand text-white'}`}
 								>
 									{person.isMe ? 'View' : 'Book'}

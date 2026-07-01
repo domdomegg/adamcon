@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import {useRouter} from 'next/router';
-import {useCallback, useEffect, useState} from 'react';
+import {
+	useCallback, useEffect, useRef, useState,
+} from 'react';
 import Shell from '../../components/Shell';
 import Avatar from '../../components/Avatar';
 import {ChatIcon, LinkIcon} from '../../components/Icons';
@@ -24,25 +26,56 @@ const Book = () => {
 	const [note, setNote] = useState('');
 	const [error, setError] = useState('');
 	const [submitting, setSubmitting] = useState(false);
+	const noteRef = useRef<HTMLTextAreaElement>(null);
+	const preselected = useRef(false);
 
 	const load = useCallback(async () => {
 		if (!router.isReady) {
-			return;
+			return null;
 		}
 
-		setDetail(await api<Detail>(`/api/people/${String(router.query.id)}`));
+		const data = await api<Detail>(`/api/people/${String(router.query.id)}`);
+		setDetail(data);
+		return data;
 	}, [router.isReady, router.query.id]);
 
 	useEffect(() => {
-		load().catch(async () => router.push('/people/'));
+		load().then((data) => {
+			// Your own card links straight to the edit page; handle direct URLs too.
+			if (data?.isMe) {
+				void router.replace('/profile/');
+				return;
+			}
+
+			// Arriving via "find someone" for a specific slot: pre-select it.
+			const wanted = Number(router.query.slot);
+			if (data && wanted && !preselected.current) {
+				preselected.current = true;
+				if (data.rows.some((r) => r.slotId === wanted && r.state === 'free')) {
+					setSelected(wanted);
+				}
+			}
+		}).catch(async () => router.push('/people/'));
 	}, [load, router]);
 
-	if (!detail) {
+	if (!detail || detail.isMe) {
 		return <Shell><div /></Shell>;
 	}
 
-	const {person, isMe, rows, existing} = detail;
+	const {person, rows, existing} = detail;
 	const firstName = person.name.split(' ')[0];
+
+	const selectSlot = (slotId: number | null) => {
+		setSelected(slotId);
+		if (slotId !== null) {
+			// Glide down to the note and focus it once the scroll has settled,
+			// so mobile keyboards don't cause a jarring double-jump.
+			setTimeout(() => {
+				noteRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'});
+				setTimeout(() => noteRef.current?.focus({preventScroll: true}), 350);
+			}, 50);
+		}
+	};
 
 	const request = async () => {
 		if (!selected) {
@@ -74,7 +107,7 @@ const Book = () => {
 				<div className='flex items-center gap-3'>
 					<Avatar id={person.id} initials={person.initials} photoUrl={person.photoUrl} size='lg' />
 					<div className='flex-1 min-w-0'>
-						<div className='font-bold text-[19px]'>{person.name}{isMe && <span className='text-muted text-[13px] font-semibold'> · you</span>}</div>
+						<div className='font-bold text-[19px]'>{person.name}</div>
 						<div className='text-[13px] text-muted'>{person.headline}</div>
 					</div>
 				</div>
@@ -93,7 +126,7 @@ const Book = () => {
 							</a>
 						)
 						: <span />}
-					{person.waLink && !isMe && (
+					{person.waLink && (
 						<a href={person.waLink} className='inline-flex items-center gap-1.5 bg-[#25d366] text-white rounded-[10px] px-3.5 py-2 text-[13.5px] font-bold' target='_blank' rel='noreferrer'>
 							<ChatIcon className='w-[15px] h-[15px]' />
 							WhatsApp
@@ -102,11 +135,7 @@ const Book = () => {
 				</div>
 			</div>
 
-			{isMe && (
-				<p className='text-[13px] text-muted'>This is your page as others see it. Change it on the Profile tab.</p>
-			)}
-
-			{!isMe && existing && (
+			{existing && (
 				<div className='bg-white border border-line rounded-2xl p-4 text-[14px]'>
 					{existing.status === 'accepted'
 						? <>You’re meeting {firstName} at <b>{existing.time}</b> — it’s on your <Link href='/schedule/' className='text-brand font-bold'>schedule</Link>.</>
@@ -114,7 +143,7 @@ const Book = () => {
 				</div>
 			)}
 
-			{!isMe && !existing && (
+			{!existing && (
 				<>
 					<h2 className='text-xl font-extrabold text-brand-dark mt-5'>Pick a time</h2>
 					<p className='text-[13px] text-muted mb-3.5'>Times you’re <b>both</b> free · meetings are 25 min</p>
@@ -129,7 +158,7 @@ const Book = () => {
 									type='button'
 									disabled={!free}
 									onClick={() => {
-										setSelected(row.slotId);
+										selectSlot(row.slotId);
 									}}
 									className={`w-full flex items-center justify-between px-4 py-[11px] border-b border-line last:border-b-0 text-[15px] text-left ${isSelected ? 'bg-brand text-white' : ''}`}
 								>
@@ -145,6 +174,7 @@ const Book = () => {
 					<label className='block text-[13px] font-bold mt-4 mb-1.5' htmlFor='note'>Add a note (optional)</label>
 					<textarea
 						id='note'
+						ref={noteRef}
 						value={note}
 						onChange={(e) => {
 							setNote(e.target.value);
@@ -153,16 +183,19 @@ const Book = () => {
 					/>
 
 					{error && <p className='text-brand-dark text-[13px] mt-2'>{error}</p>}
-					<button
-						type='button'
-						disabled={!selected || submitting}
-						onClick={() => {
-							void request();
-						}}
-						className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold mt-3 disabled:opacity-40'
-					>
-						{selected ? `Request ${rows.find((r) => r.slotId === selected)?.time} with ${firstName}` : 'Pick a time above'}
-					</button>
+					{/* Sticky so the button stays visible above the keyboard while writing the note */}
+					<div className='sticky bottom-3 mt-3 md:static'>
+						<button
+							type='button'
+							disabled={!selected || submitting}
+							onClick={() => {
+								void request();
+							}}
+							className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold shadow-lg shadow-red-200/60 disabled:opacity-40 disabled:shadow-none'
+						>
+							{selected ? `Request ${rows.find((r) => r.slotId === selected)?.time} with ${firstName}` : 'Pick a time above'}
+						</button>
+					</div>
 					<p className='text-[12.5px] text-muted text-center mt-2.5'>
 						The slot is held for you both until {firstName} answers.
 					</p>
