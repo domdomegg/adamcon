@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import {useRouter} from 'next/router';
 import {useEffect, useMemo, useState} from 'react';
 import Shell from '../../components/Shell';
 import Avatar from '../../components/Avatar';
+import Loading from '../../components/Loading';
 import {CheckIcon, ClockIcon, SearchIcon} from '../../components/Icons';
 import {api} from '../../lib/client';
 import type {PersonCard} from '../api/people';
@@ -28,7 +28,7 @@ const StatusPill = ({person}: {person: PersonCard}) => {
 const People = () => {
 	const router = useRouter();
 	const freeAt = typeof router.query.freeAt === 'string' ? router.query.freeAt : null;
-	const [people, setPeople] = useState<PersonCard[]>([]);
+	const [people, setPeople] = useState<PersonCard[] | null>(null);
 	const [freeAtTime, setFreeAtTime] = useState<string | null>(null);
 	const [query, setQuery] = useState('');
 
@@ -47,17 +47,20 @@ const People = () => {
 	const shown = useMemo(() => {
 		const q = query.trim().toLowerCase();
 		if (!q) {
-			return people;
+			return people ?? [];
 		}
 
-		return people.filter((p) => `${p.name} ${p.headline} ${p.bio}`.toLowerCase().includes(q));
+		return (people ?? []).filter((p) => `${p.name} ${p.headline} ${p.bio}`.toLowerCase().includes(q));
 	}, [people, query]);
+
+	const personHref = (person: PersonCard) =>
+		(person.isMe ? '/profile/' : `/people/${person.id}/${freeAt && person.status === 'none' ? `?slot=${freeAt}` : ''}`);
 
 	return (
 		<Shell>
 			<h1 className='text-xl font-extrabold text-brand-dark'>People</h1>
 			<p className='text-[13px] text-muted mb-3.5'>
-				{people.length} attending · Sat 1 Aug, 11:00–18:00
+				{people ? `${people.length} attending · ` : ''}Sat 1 Aug, 11:00–18:00
 			</p>
 
 			<div className='flex items-center gap-2 bg-white border-[1.5px] border-line rounded-xl px-3.5 py-[11px] mb-3.5'>
@@ -73,40 +76,41 @@ const People = () => {
 			</div>
 
 			{freeAtTime && (
-				<button
-					type='button'
-					onClick={() => {
-						void router.replace('/people/');
-					}}
+				<a
+					href='/people/'
 					className='inline-flex items-center gap-2 mb-3 bg-white border-[1.5px] border-brand text-brand-dark rounded-full px-3.5 py-1.5 text-[13.5px] font-bold'
 				>
 					Free at {freeAtTime} <span className='opacity-70 font-extrabold'>✕</span>
-				</button>
+				</a>
 			)}
 
+			{!people && <Loading />}
+
 			{shown.map((person) => (
-				<div key={person.id} className='bg-white border border-line rounded-2xl p-3.5 mb-3'>
+				<div key={person.id} className='relative bg-white border border-line rounded-2xl p-3.5 mb-3'>
 					<div className='flex items-center gap-3'>
 						<Avatar id={person.id} initials={person.initials} photoUrl={person.photoUrl} />
 						<div className='flex-1 min-w-0'>
 							<div className='font-bold text-[16px]'>
-								{person.name}
+								{/* Stretched link: the whole card navigates to the person */}
+								<a href={personHref(person)} className='after:absolute after:inset-0 after:rounded-2xl'>
+									{person.name}
+								</a>
 								{person.isMe && <span className='text-muted text-[12.5px] font-semibold'> · you</span>}
 							</div>
 							<div className='text-[13px] text-muted'>{person.headline}</div>
 						</div>
 						{person.isMe || person.status === 'none'
 							? (
-								<Link
-									href={person.isMe ? '/profile/' : `/people/${person.id}/${freeAt ? `?slot=${freeAt}` : ''}`}
-									className={`rounded-[10px] px-4 py-2 text-sm font-bold shrink-0 ${person.isMe ? 'bg-stone-100 text-ink' : 'bg-brand text-white'}`}
+								<a
+									href={personHref(person)}
+									tabIndex={-1}
+									className={`relative rounded-[10px] px-4 py-2 text-sm font-bold shrink-0 ${person.isMe ? 'bg-stone-100 text-ink' : 'bg-brand text-white'}`}
 								>
 									{person.isMe ? 'View' : 'Book'}
-								</Link>
+								</a>
 							)
-							: (
-								<Link href={`/people/${person.id}/`}><StatusPill person={person} /></Link>
-							)}
+							: <StatusPill person={person} />}
 					</div>
 					{person.note && (
 						<p className='text-[12.5px] text-muted mt-2'>“{person.note}”</p>

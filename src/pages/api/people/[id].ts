@@ -47,6 +47,14 @@ export default withUser((req, res, user) => {
 		person: publicUser(target),
 		isMe: target.id === user.id,
 		rows,
-		existing: existing ? {status: existing.status, time: TIMELINE.find((t) => t.slotId === existing.slot_id)?.time} : null,
+		existing: existing
+			? {
+				id: existing.id,
+				status: existing.status,
+				time: TIMELINE.find((t) => t.slotId === existing.slot_id)?.time,
+				note: existing.note,
+				direction: existing.requester_id === user.id ? 'out' as const : 'in' as const,
+			}
+			: null,
 	});
 });

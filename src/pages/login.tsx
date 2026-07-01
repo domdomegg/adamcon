@@ -26,17 +26,21 @@ const Login = () => {
 	const router = useRouter();
 	const [email, setEmail] = useState('');
 	const [sent, setSent] = useState(false);
+	const [sending, setSending] = useState(false);
 	const [error, setError] = useState('');
 	const inbox = inboxFor(email);
 
 	const submit = async () => {
 		setError('');
+		setSending(true);
 		try {
 			await api('/api/auth/request-link', {method: 'POST', body: JSON.stringify({email})});
 			setSent(true);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Something went wrong');
 		}
+
+		setSending(false);
 	};
 
 	return (
@@ -69,8 +73,8 @@ const Login = () => {
 							{error && <p className='text-brand-dark text-[13px] mb-2'>{error}</p>}
 							<button type='button' onClick={() => {
 								void submit();
-							}} className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold'>
-								Email me a sign-in link
+							}} className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold disabled:opacity-60' disabled={sending}>
+								{sending ? 'Sending…' : 'Email me a sign-in link'}
 							</button>
 						</>
 					)

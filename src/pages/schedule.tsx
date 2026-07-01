@@ -1,9 +1,8 @@
-import Link from 'next/link';
 import {useCallback, useEffect, useState} from 'react';
 import Shell from '../components/Shell';
 import Avatar from '../components/Avatar';
-import {ChatIcon} from '../components/Icons';
-import {api} from '../lib/client';
+import Loading from '../components/Loading';
+import {api, avatarColor} from '../lib/client';
 import {WATER_FOUNTAIN_URL} from '../lib/slots';
 import type {ScheduleRow} from './api/schedule';
 
@@ -11,12 +10,13 @@ type Schedule = {rows: ScheduleRow[]; meetings: number; toAnswer: number};
 
 const EVENT_DAY = '2026-08-01';
 
-const Toggle = ({on, onChange}: {on: boolean; onChange: () => void}) => (
+const Toggle = ({on, disabled, onChange}: {on: boolean; disabled: boolean; onChange: () => void}) => (
 	<button
 		type='button'
 		onClick={onChange}
+		disabled={disabled}
 		aria-label={on ? 'Block this slot' : 'Open this slot'}
-		className={`w-11 h-[26px] rounded-full relative shrink-0 transition-colors ${on ? 'bg-accept' : 'bg-stone-300'}`}
+		className={`w-11 h-[26px] rounded-full relative shrink-0 transition-colors disabled:opacity-60 ${on ? 'bg-accept' : 'bg-stone-300'}`}
 	>
 		<span className={`absolute top-[3px] w-5 h-5 rounded-full bg-white shadow transition-all ${on ? 'right-[3px]' : 'left-[3px]'}`} />
 	</button>
@@ -32,8 +32,8 @@ const nowLondon = (): {date: string; time: string} => {
 
 const SchedulePage = () => {
 	const [schedule, setSchedule] = useState<Schedule | null>(null);
-	const [sheet, setSheet] = useState<ScheduleRow | null>(null);
 	const [error, setError] = useState('');
+	const [pending, setPending] = useState<string | null>(null);
 
 	const load = useCallback(async () => {
 		setSchedule(await api<Schedule>('/api/schedule'));
@@ -51,23 +51,26 @@ const SchedulePage = () => {
 
 	const act = async (meetingId: number, action: string) => {
 		setError('');
+		setPending(`${action}-${meetingId}`);
 		try {
 			await api(`/api/meetings/${meetingId}`, {method: 'POST', body: JSON.stringify({action})});
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Something went wrong');
 		}
 
-		setSheet(null);
 		await load();
+		setPending(null);
 	};
 
 	const toggle = async (slotId: number, available: boolean) => {
+		setPending(`toggle-${slotId}`);
 		await api('/api/schedule', {method: 'PUT', body: JSON.stringify({slotId, available})});
 		await load();
+		setPending(null);
 	};
 
 	if (!schedule) {
-		return <Shell><div /></Shell>;
+		return <Shell><Loading /></Shell>;
 	}
 
 	const now = nowLondon();
@@ -108,18 +111,25 @@ const SchedulePage = () => {
 						{(row.kind === 'free' || row.kind === 'blocked') && (
 							<div className={`border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[10px] text-[13.5px] text-muted flex items-center justify-between gap-2 ${row.kind === 'blocked' ? 'opacity-75' : ''}`}>
 								<span>
-									{row.kind === 'free' ? <>Free · <Link href={`/people/?freeAt=${row.slotId}`} className='text-brand font-bold'>find someone ›</Link></> : 'Blocked'}
+									{row.kind === 'free' ? <>Free · <a href={`/people/?freeAt=${row.slotId}`} className='text-brand font-bold'>find someone ›</a></> : 'Blocked'}
 								</span>
-								<Toggle on={row.kind === 'free'} onChange={() => {
-									void toggle(row.slotId!, row.kind === 'blocked');
-								}} />
+								<Toggle
+									on={row.kind === 'free'}
+									disabled={pending === `toggle-${row.slotId}`}
+									onChange={() => {
+										void toggle(row.slotId!, row.kind === 'blocked');
+									}}
+								/>
 							</div>
 						)}
 
 						{row.kind === 'meeting' && row.meeting && (
-							<button type='button' onClick={() => {
-								setSheet(row);
-							}} className='w-full text-left bg-white border border-line border-l-[5px] rounded-2xl p-3.5' style={{borderLeftColor: '#1c1917'}}>
+							<a
+								href={`/people/${row.meeting.personId}/`}
+								className='relative block w-full text-left bg-white border border-line rounded-2xl p-3.5 pl-[19px]'
+							>
+								{/* Accent bar inset from the corners, so the radius doesn't bend it */}
+								<span className='absolute left-1.5 top-3 bottom-3 w-[5px] rounded-full' style={{background: avatarColor(row.meeting.personId)}} />
 								<div className='flex items-center gap-3'>
 									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
 									<div className='flex-1 min-w-0'>
@@ -128,86 +138,68 @@ const SchedulePage = () => {
 									</div>
 									<span className='text-stone-300 text-[19px] font-bold'>›</span>
 								</div>
-							</button>
+								{row.meeting.note && <p className='text-[12.5px] text-muted mt-2'>“{row.meeting.note}”</p>}
+							</a>
 						)}
 
 						{row.kind === 'incoming' && row.meeting && (
 							<div className='bg-tint-soft border-[1.5px] border-brand rounded-2xl p-3.5'>
-								<div className='flex items-center gap-3'>
+								<a href={`/people/${row.meeting.personId}/`} className='flex items-center gap-3'>
 									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
 									<div className='flex-1 min-w-0'>
 										<div className='font-bold text-[16px]'>{row.meeting.name}</div>
 										<div className='text-[13px] text-muted'>wants to meet you</div>
 									</div>
 									<span className='bg-brand text-white text-[11px] font-extrabold uppercase tracking-wide rounded-full px-2.5 py-1'>new</span>
-								</div>
+								</a>
 								{row.meeting.note && <p className='text-[12.5px] text-muted mt-2'>“{row.meeting.note}”</p>}
 								<div className='flex gap-2 mt-3'>
-									<button type='button' onClick={() => {
-										void act(row.meeting!.id, 'accept');
-									}} className='flex-1 bg-accept text-white rounded-[10px] py-2.5 text-sm font-bold'>Accept</button>
-									<button type='button' onClick={() => {
-										void act(row.meeting!.id, 'decline');
-									}} className='flex-1 bg-stone-100 text-muted rounded-[10px] py-2.5 text-sm font-bold'>Decline</button>
+									<button
+										type='button'
+										disabled={pending !== null}
+										onClick={() => {
+											void act(row.meeting!.id, 'accept');
+										}}
+										className='flex-1 bg-accept text-white rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
+									>
+										{pending === `accept-${row.meeting.id}` ? 'Accepting…' : 'Accept'}
+									</button>
+									<button
+										type='button'
+										disabled={pending !== null}
+										onClick={() => {
+											void act(row.meeting!.id, 'decline');
+										}}
+										className='flex-1 bg-stone-100 text-muted rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
+									>
+										{pending === `decline-${row.meeting.id}` ? 'Declining…' : 'Decline'}
+									</button>
 								</div>
 							</div>
 						)}
 
 						{row.kind === 'outgoing' && row.meeting && (
 							<div className='border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[10px] text-[13.5px] text-muted flex items-center justify-between gap-2'>
-								<span className='flex items-center gap-2'>
+								<a href={`/people/${row.meeting.personId}/`} className='flex items-center gap-2'>
 									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} size='sm' />
 									You asked {row.meeting.firstName} — waiting
-								</span>
-								<button type='button' onClick={() => {
-									void act(row.meeting!.id, 'withdraw');
-								}} className='text-brand font-bold text-[13px]'>withdraw</button>
+								</a>
+								<button
+									type='button'
+									disabled={pending !== null}
+									onClick={() => {
+										void act(row.meeting!.id, 'withdraw');
+									}}
+									className='text-brand font-bold text-[13px] disabled:opacity-60'
+								>
+									{pending === `withdraw-${row.meeting.id}` ? 'withdrawing…' : 'withdraw'}
+								</button>
 							</div>
 						)}
 					</div>
 				))}
 			</div>
 
-			{sheet?.meeting && (
-				<div className='fixed inset-0 z-30'>
-					<button type='button' aria-label='Close' className='absolute inset-0 bg-ink/45' onClick={() => {
-						setSheet(null);
-					}} />
-					<div className='absolute bottom-0 inset-x-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[440px] md:rounded-3xl bg-white rounded-t-3xl px-4 pt-3 pb-9 md:pb-5'>
-						<div className='w-9 h-1 rounded-full bg-stone-300 mx-auto mb-4 md:hidden' />
-						<div className='flex items-center gap-3'>
-							<Avatar id={sheet.meeting.personId} initials={sheet.meeting.initials} photoUrl={sheet.meeting.photoUrl} size='lg' />
-							<div>
-								<div className='font-bold text-[19px]'>{sheet.meeting.name}</div>
-								<div className='text-[13px] text-muted'>{sheet.meeting.headline}</div>
-							</div>
-						</div>
-						<div className='h-px bg-line my-3' />
-						<div className='text-[15px] font-bold'>{sheet.time} – {sheet.meeting.endTime} · meet at <a href={WATER_FOUNTAIN_URL} target='_blank' rel='noreferrer' className='text-brand underline'>the water fountain</a></div>
-						{sheet.meeting.note && <p className='text-[12.5px] text-muted mt-1.5'>“{sheet.meeting.note}”</p>}
-						<div className='flex gap-2 mt-4'>
-							{sheet.meeting.waLink && (
-								<a href={sheet.meeting.waLink} target='_blank' rel='noreferrer' className='flex-1 inline-flex items-center justify-center gap-1.5 bg-[#25d366] text-white rounded-[10px] py-[13px] text-sm font-bold'>
-									<ChatIcon className='w-[15px] h-[15px]' />
-									WhatsApp
-								</a>
-							)}
-							<button
-								type='button'
-								onClick={() => {
-									// eslint-disable-next-line no-alert
-									if (window.confirm(`Cancel your ${sheet.time} meeting with ${sheet.meeting!.firstName}? They'll be notified and the slot reopens.`)) {
-										void act(sheet.meeting!.id, 'cancel');
-									}
-								}}
-								className='flex-1 bg-tint text-brand-dark rounded-[10px] py-[13px] text-sm font-bold'
-							>
-								Cancel meeting
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
 		</Shell>
 	);
 };

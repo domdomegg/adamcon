@@ -27,7 +27,9 @@ export default withUser((req, res, user) => {
 	const byOther = new Map(live.map((m) => [m.requester_id === user.id ? m.target_id : m.requester_id, m]));
 
 	const people: PersonCard[] = users
-		.filter((u) => (freeAt ? (u.id === user.id ? true : isFree(u.id, freeAt)) : true))
+		// The freeAt filter is a booking aid, so it hides anyone unbookable:
+		// busy at that time, or already meeting/asked by you at any time.
+		.filter((u) => (freeAt ? (u.id === user.id ? true : (isFree(u.id, freeAt) && !byOther.get(u.id))) : true))
 		.map((u) => {
 			const meeting = byOther.get(u.id);
 			return {

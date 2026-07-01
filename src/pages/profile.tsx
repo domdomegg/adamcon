@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
-import {useRouter} from 'next/router';
 import Shell from '../components/Shell';
 import Avatar from '../components/Avatar';
+import Loading from '../components/Loading';
 import {api} from '../lib/client';
 
 type Me = {
@@ -69,9 +69,10 @@ const resizeToJpeg = async (file: File, size = 512): Promise<string> => {
 };
 
 const Profile = () => {
-	const router = useRouter();
 	const [me, setMe] = useState<Me | null>(null);
 	const [saved, setSaved] = useState(false);
+	const [saving, setSaving] = useState(false);
+	const [uploading, setUploading] = useState(false);
 	const [photoError, setPhotoError] = useState('');
 	const fileRef = useRef<HTMLInputElement>(null);
 
@@ -80,7 +81,7 @@ const Profile = () => {
 	}, []);
 
 	if (!me) {
-		return <Shell><div /></Shell>;
+		return <Shell><Loading /></Shell>;
 	}
 
 	const set = (patch: Partial<Me>) => {
@@ -89,17 +90,20 @@ const Profile = () => {
 	};
 
 	const save = async () => {
+		setSaving(true);
 		await api('/api/me', {method: 'PUT', body: JSON.stringify(me)});
+		setSaving(false);
 		setSaved(true);
 	};
 
 	const signOut = async () => {
 		await api('/api/auth/signout', {method: 'POST'});
-		await router.push('/login/');
+		window.location.assign('/login/');
 	};
 
 	const uploadPhoto = async (file: File) => {
 		setPhotoError('');
+		setUploading(true);
 		try {
 			const dataUrl = await resizeToJpeg(file);
 			const {photoUrl} = await api<{photoUrl: string}>('/api/me/photo', {
@@ -110,6 +114,8 @@ const Profile = () => {
 		} catch (e) {
 			setPhotoError(e instanceof Error ? e.message : 'Upload failed');
 		}
+
+		setUploading(false);
 	};
 
 	return (
@@ -147,9 +153,10 @@ const Profile = () => {
 					<button
 						type='button'
 						onClick={() => fileRef.current?.click()}
-						className='bg-stone-100 rounded-[10px] px-4 py-2 text-sm font-bold'
+						disabled={uploading}
+						className='bg-stone-100 rounded-[10px] px-4 py-2 text-sm font-bold disabled:opacity-60'
 					>
-						Change photo
+						{uploading ? 'Uploading…' : 'Change photo'}
 					</button>
 					<p className='text-[12px] text-muted mt-1.5'>Signed in as {me.email}</p>
 					{photoError && <p className='text-[12px] text-brand-dark mt-1'>{photoError}</p>}
@@ -201,7 +208,7 @@ const Profile = () => {
 				}}
 				className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold'
 			>
-				{saved ? 'Saved ✓' : 'Save'}
+				{saving ? 'Saving…' : (saved ? 'Saved ✓' : 'Save')}
 			</button>
 		</Shell>
 	);

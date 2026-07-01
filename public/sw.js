@@ -1,10 +1,18 @@
 // App-shell caching so the app opens instantly on flaky towpath signal.
 // Pages and static assets: cache-first with background refresh.
 // API calls: network-first, falling back to the last cached response.
-const CACHE = 'adamcon-v1';
+const CACHE = 'adamcon-v2';
+
+// Precached so every page navigation (plain MPA links) is served instantly
+// from cache, with a background refresh keeping it current.
+const PRECACHE = ['/', '/login/', '/people/', '/schedule/', '/profile/', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', (event) => {
-	event.waitUntil(self.skipWaiting());
+	event.waitUntil((async () => {
+		const cache = await caches.open(CACHE);
+		await cache.addAll(PRECACHE);
+		await self.skipWaiting();
+	})());
 });
 
 self.addEventListener('activate', (event) => {

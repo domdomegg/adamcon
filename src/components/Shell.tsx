@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import {useRouter} from 'next/router';
 import {useEffect, useState, type ReactNode} from 'react';
 import {CalendarIcon, PeopleIcon, UserIcon} from './Icons';
@@ -64,12 +63,12 @@ const Shell = ({children, badgeOverride}: {children: ReactNode; badgeOverride?: 
 			{/* Desktop top nav */}
 			<header className='hidden md:block fixed top-0 inset-x-0 bg-white border-b border-line z-20'>
 				<div className='max-w-[1000px] mx-auto flex items-center justify-between px-6 py-3'>
-					<Link href='/people/' className='text-[21px] font-extrabold tracking-tight text-brand'>
+					<a href='/people/' className='text-[21px] font-extrabold tracking-tight text-brand'>
 						AdamCon <span className='text-ink'>’26</span>
-					</Link>
+					</a>
 					<nav className='flex gap-2'>
 						{tabs.map(({href, label, Icon, active}) => (
-							<Link
+							<a
 								key={href}
 								href={`${href}/`}
 								className={`flex items-center gap-2 px-4 py-2 rounded-full text-[15px] font-bold ${active ? 'bg-tint text-brand-dark' : 'text-muted'}`}
@@ -77,7 +76,7 @@ const Shell = ({children, badgeOverride}: {children: ReactNode; badgeOverride?: 
 								<Icon className='w-[19px] h-[19px]' />
 								{label}
 								{label === 'Schedule' && <Badge count={count} />}
-							</Link>
+							</a>
 						))}
 					</nav>
 				</div>
@@ -90,13 +89,13 @@ const Shell = ({children, badgeOverride}: {children: ReactNode; badgeOverride?: 
 			{/* Mobile bottom tab bar */}
 			<nav className='md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-line z-20 flex px-5 pt-2 pb-6'>
 				{tabs.map(({href, label, Icon, active}) => (
-					<Link key={href} href={`${href}/`} className={`flex-1 flex flex-col items-center gap-[3px] text-[11.5px] font-semibold ${active ? 'text-brand-dark font-extrabold' : 'text-stone-400'}`}>
+					<a key={href} href={`${href}/`} className={`flex-1 flex flex-col items-center gap-[3px] text-[11.5px] font-semibold ${active ? 'text-brand-dark font-extrabold' : 'text-stone-400'}`}>
 						<span className={`relative flex px-5 py-1 rounded-full ${active ? 'bg-tint' : ''}`}>
 							<Icon className='w-6 h-6' />
 							{label === 'Schedule' && <Badge count={count} />}
 						</span>
 						{label}
-					</Link>
+					</a>
 				))}
 			</nav>
 		</div>

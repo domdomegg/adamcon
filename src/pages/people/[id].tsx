@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import {useRouter} from 'next/router';
 import {
 	useCallback, useEffect, useRef, useState,
 } from 'react';
 import Shell from '../../components/Shell';
 import Avatar from '../../components/Avatar';
+import Loading from '../../components/Loading';
 import {ChatIcon, LinkIcon} from '../../components/Icons';
 import {api} from '../../lib/client';
 import type {BookRow} from '../api/people/[id]';
@@ -14,7 +14,13 @@ type Detail = {
 	person: PublicUser;
 	isMe: boolean;
 	rows: BookRow[];
-	existing: {status: string; time?: string} | null;
+	existing: {
+		id: number;
+		status: 'pending' | 'accepted';
+		time?: string;
+		note: string;
+		direction: 'in' | 'out';
+	} | null;
 };
 
 const prettyLink = (url: string): string => url.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -25,9 +31,19 @@ const Book = () => {
 	const [selected, setSelected] = useState<number | null>(null);
 	const [note, setNote] = useState('');
 	const [error, setError] = useState('');
-	const [submitting, setSubmitting] = useState(false);
+	const [pending, setPending] = useState<string | null>(null);
 	const noteRef = useRef<HTMLTextAreaElement>(null);
 	const preselected = useRef(false);
+
+	const load = useCallback(async () => {
+		if (!router.isReady) {
+			return null;
+		}
+
+		const data = await api<Detail>(`/api/people/${String(router.query.id)}`);
+		setDetail(data);
+		return data;
+	}, [router.isReady, router.query.id]);
 
 	const selectSlot = (slotId: number | null) => {
 		setSelected(slotId);
@@ -41,21 +57,11 @@ const Book = () => {
 		}
 	};
 
-	const load = useCallback(async () => {
-		if (!router.isReady) {
-			return null;
-		}
-
-		const data = await api<Detail>(`/api/people/${String(router.query.id)}`);
-		setDetail(data);
-		return data;
-	}, [router.isReady, router.query.id]);
-
 	useEffect(() => {
 		load().then((data) => {
 			// Your own card links straight to the edit page; handle direct URLs too.
 			if (data?.isMe) {
-				void router.replace('/profile/');
+				window.location.replace('/profile/');
 				return;
 			}
 
@@ -67,11 +73,13 @@ const Book = () => {
 					selectSlot(wanted);
 				}
 			}
-		}).catch(async () => router.push('/people/'));
-	}, [load, router]);
+		}).catch(() => {
+			window.location.assign('/people/');
+		});
+	}, [load, router.query.slot]);
 
 	if (!detail || detail.isMe) {
-		return <Shell><div /></Shell>;
+		return <Shell><Loading /></Shell>;
 	}
 
 	const {person, rows, existing} = detail;
@@ -82,26 +90,44 @@ const Book = () => {
 			return;
 		}
 
-		setSubmitting(true);
+		setPending('request');
 		setError('');
 		try {
 			await api('/api/meetings', {
 				method: 'POST',
 				body: JSON.stringify({targetId: person.id, slotId: selected, note}),
 			});
-			await router.push('/schedule/');
+			window.location.assign('/schedule/');
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Something went wrong');
-			setSubmitting(false);
+			setPending(null);
 			await load();
 		}
 	};
 
+	const act = async (action: 'accept' | 'decline' | 'withdraw' | 'cancel') => {
+		if (!existing) {
+			return;
+		}
+
+		setPending(action);
+		setError('');
+		try {
+			await api(`/api/meetings/${existing.id}`, {method: 'POST', body: JSON.stringify({action})});
+		} catch (e) {
+			setError(e instanceof Error ? e.message : 'Something went wrong');
+		}
+
+		setPending(null);
+		setSelected(null);
+		await load();
+	};
+
 	return (
 		<Shell>
-			<Link href='/people/' className='flex items-center gap-2.5 text-lg font-extrabold mb-3'>
+			<a href='/people/' className='flex items-center gap-2.5 text-lg font-extrabold mb-3'>
 				<span className='text-2xl text-muted leading-none'>‹</span> People
-			</Link>
+			</a>
 
 			<div className='bg-white border border-line rounded-2xl p-3.5 mb-3'>
 				<div className='flex items-center gap-3'>
@@ -135,11 +161,71 @@ const Book = () => {
 				</div>
 			</div>
 
-			{existing && (
-				<div className='bg-white border border-line rounded-2xl p-4 text-[14px]'>
-					{existing.status === 'accepted'
-						? <>You’re meeting {firstName} at <b>{existing.time}</b> — it’s on your <Link href='/schedule/' className='text-brand font-bold'>schedule</Link>.</>
-						: <>You have a pending request with {firstName} for <b>{existing.time}</b> — manage it from your <Link href='/schedule/' className='text-brand font-bold'>schedule</Link>.</>}
+			{error && <p className='text-brand-dark text-[13px] mb-3'>{error}</p>}
+
+			{existing?.status === 'accepted' && (
+				<div className='bg-white border border-line rounded-2xl p-4'>
+					<div className='text-[15px] font-bold'>You’re meeting {firstName} at {existing.time}</div>
+					{existing.note && <p className='text-[12.5px] text-muted mt-1.5'>“{existing.note}”</p>}
+					<button
+						type='button'
+						disabled={pending !== null}
+						onClick={() => {
+							// eslint-disable-next-line no-alert
+							if (window.confirm(`Cancel your ${existing.time} meeting with ${firstName}? They'll be notified and the slot reopens.`)) {
+								void act('cancel');
+							}
+						}}
+						className='w-full mt-3 bg-tint text-brand-dark rounded-[10px] py-[11px] text-sm font-bold disabled:opacity-60'
+					>
+						{pending === 'cancel' ? 'Cancelling…' : 'Cancel meeting'}
+					</button>
+				</div>
+			)}
+
+			{existing?.status === 'pending' && existing.direction === 'out' && (
+				<div className='bg-white border border-line rounded-2xl p-4'>
+					<div className='text-[15px] font-bold'>You asked {firstName} for {existing.time} — waiting</div>
+					{existing.note && <p className='text-[12.5px] text-muted mt-1.5'>“{existing.note}”</p>}
+					<button
+						type='button'
+						disabled={pending !== null}
+						onClick={() => {
+							void act('withdraw');
+						}}
+						className='w-full mt-3 bg-stone-100 rounded-[10px] py-[11px] text-sm font-bold disabled:opacity-60'
+					>
+						{pending === 'withdraw' ? 'Withdrawing…' : 'Withdraw request'}
+					</button>
+				</div>
+			)}
+
+			{existing?.status === 'pending' && existing.direction === 'in' && (
+				<div className='bg-tint-soft border-[1.5px] border-brand rounded-2xl p-4'>
+					<div className='text-[15px] font-bold'>{firstName} wants to meet you at {existing.time}</div>
+					{existing.note && <p className='text-[12.5px] text-muted mt-1.5'>“{existing.note}”</p>}
+					<div className='flex gap-2 mt-3'>
+						<button
+							type='button'
+							disabled={pending !== null}
+							onClick={() => {
+								void act('accept');
+							}}
+							className='flex-1 bg-accept text-white rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
+						>
+							{pending === 'accept' ? 'Accepting…' : 'Accept'}
+						</button>
+						<button
+							type='button'
+							disabled={pending !== null}
+							onClick={() => {
+								void act('decline');
+							}}
+							className='flex-1 bg-stone-100 text-muted rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
+						>
+							{pending === 'decline' ? 'Declining…' : 'Decline'}
+						</button>
+					</div>
 				</div>
 			)}
 
@@ -182,18 +268,17 @@ const Book = () => {
 						className='w-full h-[74px] bg-white border-[1.5px] border-line rounded-xl px-3 py-3 text-[15px] resize-none'
 					/>
 
-					{error && <p className='text-brand-dark text-[13px] mt-2'>{error}</p>}
 					{/* Sticky so the button stays visible above the keyboard while writing the note */}
 					<div className='sticky bottom-3 mt-3 md:static'>
 						<button
 							type='button'
-							disabled={!selected || submitting}
+							disabled={!selected || pending !== null}
 							onClick={() => {
 								void request();
 							}}
 							className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold shadow-lg shadow-red-200/60 disabled:opacity-40 disabled:shadow-none'
 						>
-							{selected ? `Request ${rows.find((r) => r.slotId === selected)?.time} with ${firstName}` : 'Pick a time above'}
+							{pending === 'request' ? 'Sending…' : (selected ? `Request ${rows.find((r) => r.slotId === selected)?.time} with ${firstName}` : 'Pick a time above')}
 						</button>
 					</div>
 					<p className='text-[12.5px] text-muted text-center mt-2.5'>
