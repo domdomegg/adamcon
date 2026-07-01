@@ -60,7 +60,9 @@ const People = () => {
 		<Shell>
 			<h1 className='text-xl font-extrabold text-brand-dark'>People</h1>
 			<p className='text-[13px] text-muted mb-3.5'>
-				{people ? `${people.length} attending · ` : ''}Sat 1 Aug, 11:00–18:00
+				{people && freeAtTime && `${people.length} free at ${freeAtTime} · `}
+				{people && !freeAtTime && `${people.length} attending · `}
+				Sat 1 Aug, 11:00–18:00
 			</p>
 
 			<div className='flex items-center gap-2 bg-white border-[1.5px] border-line rounded-xl px-3.5 py-[11px] mb-3.5'>
@@ -85,6 +87,22 @@ const People = () => {
 			)}
 
 			{!people && <Loading />}
+
+			{people && shown.length === 0 && (
+				<div className='bg-white border border-line rounded-2xl p-6 text-center'>
+					<p className='text-[15px] font-bold'>
+						{query.trim()
+							? `No one matches “${query.trim()}”`
+							: (freeAtTime ? `No one else is free at ${freeAtTime}` : 'Nobody here yet')}
+					</p>
+					{freeAtTime && !query.trim() && (
+						<p className='text-[13px] text-muted mt-1.5'><a href='/people/' className='text-brand font-bold'>Clear the filter</a> to see everyone.</p>
+					)}
+					<p className='text-[13px] text-muted mt-1.5'>
+						Know someone who’d love this? Send them <a href='https://adamjones.me/blog/adamcon-2026/' className='text-brand font-bold' target='_blank' rel='noreferrer'>the AdamCon page ›</a>
+					</p>
+				</div>
+			)}
 
 			{shown.map((person) => (
 				<div key={person.id} className='relative bg-white border border-line rounded-2xl p-3.5 mb-3'>
