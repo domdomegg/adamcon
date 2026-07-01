@@ -1,1 +1,21 @@
-@import "tailwindcss"
+@import "tailwindcss";
+
+@theme {
+	--color-ink: #1c1917;
+	--color-muted: #78716c;
+	--color-brand: #e7000b;
+	--color-brand-dark: #9f0712;
+	--color-tint: #fee2e2;
+	--color-tint-soft: #fff5f5;
+	--color-paper: #fafaf9;
+	--color-line: #e7e5e4;
+	--color-accept: #2e8b57;
+	--color-booked: #dcf1e5;
+	--color-booked-ink: #1d6b43;
+}
+
+body {
+	background: #fafaf9;
+	color: var(--color-ink);
+	font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+}
