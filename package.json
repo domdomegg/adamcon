@@ -7,7 +7,6 @@
     "start": "concurrently -n ses,next -c yellow,blue \"aws-ses-v2-local\" \"EMAIL_FROM='AdamCon <adamcon@localhost>' SES_ENDPOINT=http://localhost:8005 next dev --turbopack\"",
     "build": "next build",
     "lint": "eslint",
-    "seed": "tsx scripts/seed-dev.ts",
     "import": "tsx scripts/import-airtable.ts"
   },
   "dependencies": {
