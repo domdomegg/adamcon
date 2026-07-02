@@ -2,10 +2,10 @@ import path from 'node:path';
 import fs from 'node:fs';
 import {renderEmailHtml, renderEmailText, type Template} from './emailTemplate';
 
-// Email policy (see PLAN.md): send only when the recipient must act or their
-// day changed. Invite, sign-in link, incoming requests (batched), acceptance
-// (with .ics), cancellation, and the morning-of schedule. Declines and
-// withdrawals send nothing.
+// Email policy: send only when the recipient must act or their day changed.
+// Invite, sign-in link, each incoming request (with its details), and
+// cancellation. Accepts show up on the schedule; declines and withdrawals
+// send nothing. The morning-of schedule email is a separate script (README).
 
 export type Email = {
 	to: string;
@@ -15,9 +15,29 @@ export type Email = {
 
 const FROM = process.env.EMAIL_FROM;
 
+const sleep = async (ms: number) => new Promise((resolve) => {
+	setTimeout(resolve, ms);
+});
+
+// SES has no idempotency key, so a retry after an ambiguous failure can
+// rarely double-send — better than silently dropping the email.
+const withRetries = async (send: () => Promise<void>, delays: number[]): Promise<void> => {
+	const [delay, ...rest] = delays;
+	try {
+		await send();
+	} catch (error) {
+		if (delay === undefined) {
+			throw error;
+		}
+
+		await sleep(delay);
+		await withRetries(send, rest);
+	}
+};
+
 export const sendEmail = async (email: Email): Promise<void> => {
 	if (FROM) {
-		await sendViaSes(email);
+		await withRetries(async () => sendViaSes(email), [500, 2000]);
 		return;
 	}
 

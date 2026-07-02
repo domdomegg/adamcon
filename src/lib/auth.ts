@@ -30,11 +30,16 @@ export const consumeLoginToken = (token: string): string | null => {
 	return session;
 };
 
+// Secure in production so the session token never rides a plaintext http://
+// request (the ingress redirects to https, but the cookie would already have
+// been sent by then). Omitted in dev, which runs on plain http.
+const cookieFlags = `Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
+
 export const sessionCookie = (session: string): string =>
-	`${SESSION_COOKIE}=${session}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;
+	`${SESSION_COOKIE}=${session}; ${cookieFlags}; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;
 
 export const clearSessionCookie = (): string =>
-	`${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+	`${SESSION_COOKIE}=; ${cookieFlags}; Max-Age=0`;
 
 export const getSessionUser = (req: NextApiRequest): UserRow | null => {
 	const token = req.cookies[SESSION_COOKIE];

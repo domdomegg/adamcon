@@ -49,6 +49,9 @@ const SchedulePage = () => {
 		};
 	}, [load]);
 
+	// After any failure (including a timeout where we never heard the outcome),
+	// reload from the server — it's authoritative, and the buttons must never
+	// stay disabled by a stuck pending state.
 	const act = async (meetingId: number, action: string) => {
 		setError('');
 		setPending(`${action}-${meetingId}`);
@@ -56,17 +59,23 @@ const SchedulePage = () => {
 			await api(`/api/meetings/${meetingId}`, {method: 'POST', body: JSON.stringify({action})});
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Something went wrong');
+		} finally {
+			await load().catch(() => undefined);
+			setPending(null);
 		}
-
-		await load();
-		setPending(null);
 	};
 
 	const toggle = async (slotId: number, available: boolean) => {
+		setError('');
 		setPending(`toggle-${slotId}`);
-		await api('/api/schedule', {method: 'PUT', body: JSON.stringify({slotId, available})});
-		await load();
-		setPending(null);
+		try {
+			await api('/api/schedule', {method: 'PUT', body: JSON.stringify({slotId, available})});
+		} catch (e) {
+			setError(e instanceof Error ? e.message : 'Something went wrong');
+		} finally {
+			await load().catch(() => undefined);
+			setPending(null);
+		}
 	};
 
 	if (!schedule) {

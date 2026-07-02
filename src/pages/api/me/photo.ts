@@ -33,7 +33,7 @@ export default withUser((req, res, user) => {
 	fs.writeFileSync(path.join(photosDir, `${user.id}.jpg`), buffer);
 
 	// Cache-bust with the update time so avatars refresh everywhere.
-	const photoUrl = `/api/photos/${user.id}?v=${Date.now()}`;
+	const photoUrl = `/api/photos/${user.id}/?v=${Date.now()}`;
 	db.prepare('UPDATE users SET photo_url = ? WHERE id = ?').run(photoUrl, user.id);
 	res.json({photoUrl});
 });

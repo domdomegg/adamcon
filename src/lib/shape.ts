@@ -13,7 +13,10 @@ export type PublicUser = {
 
 export const waLink = (whatsapp: string): string | null => {
 	const digits = whatsapp.replaceAll(/\D/g, '').replace(/^00/, '');
-	return digits.length >= 7 ? `https://wa.me/${digits}` : null;
+	// wa.me needs a country code; treat a remaining leading 0 as UK national
+	// format ("07911 123456"), by far the most common free-text entry here.
+	const normalized = digits.replace(/^0/, '44');
+	return normalized.length >= 7 ? `https://wa.me/${normalized}` : null;
 };
 
 export const initials = (name: string): string =>

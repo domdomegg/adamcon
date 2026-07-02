@@ -64,7 +64,13 @@ export const createRequest = (
 	})();
 
 	if (result.ok) {
-		void notifyTarget(requester, result.meeting);
+		// Fire-and-forget so the booking never blocks on SES, but a lost email
+		// strands the held slot (the target never hears about the request), so
+		// failures after retries must at least be visible in the logs.
+		const {id} = result.meeting;
+		notifyTarget(requester, result.meeting).catch((error: unknown) => {
+			console.error(`Failed to send request email for meeting ${id}:`, error);
+		});
 	}
 
 	return result;
@@ -135,7 +141,7 @@ export const answerRequest = (
 	// stay silent by design.
 	if (action === 'cancel') {
 		const other = user.id === requester.id ? target : requester;
-		void sendEmail({
+		sendEmail({
 			to: other.email,
 			subject: `Your ${time} AdamCon meeting was cancelled`,
 			template: {
@@ -143,6 +149,8 @@ export const answerRequest = (
 				paragraphs: [`${user.name} cancelled your ${time} meeting. The slot is open again if you want to rebook it.`],
 				cta: {label: 'Find someone for the slot', url: `${appOrigin()}/people/`},
 			},
+		}).catch((error: unknown) => {
+			console.error(`Failed to send cancellation email for meeting ${meetingId}:`, error);
 		});
 	}
 

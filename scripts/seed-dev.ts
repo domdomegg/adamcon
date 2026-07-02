@@ -42,7 +42,7 @@ for (const person of CAST) {
 	insert.run(person.email, person.name, person.headline, person.bio, person.link, person.whatsapp);
 	const user = db.prepare('SELECT id FROM users WHERE email = ?').get(person.email) as {id: number};
 	const token = createLoginToken(user.id);
-	console.log(`${person.name.padEnd(18)} ${appOrigin()}/api/auth/verify?token=${token}`);
+	console.log(`${person.name.padEnd(18)} ${appOrigin()}/verify/?token=${token}`);
 }
 
 console.log('\nSeeded. Open a link above to sign in as that person.');

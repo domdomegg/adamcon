@@ -102,7 +102,8 @@ const Book = () => {
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Something went wrong');
 			setPending(null);
-			await load();
+			// Reload — the request may have landed even if the response didn't.
+			await load().catch(() => undefined);
 		}
 	};
 
@@ -117,11 +118,11 @@ const Book = () => {
 			await api(`/api/meetings/${existing.id}`, {method: 'POST', body: JSON.stringify({action})});
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Something went wrong');
+		} finally {
+			await load().catch(() => undefined);
+			setPending(null);
+			setSelected(null);
 		}
-
-		setPending(null);
-		setSelected(null);
-		await load();
 	};
 
 	return (

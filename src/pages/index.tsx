@@ -2,7 +2,7 @@ import {useEffect} from 'react';
 
 const Home = () => {
 	useEffect(() => {
-		fetch('/api/me').then((res) => {
+		fetch('/api/me/').then((res) => {
 			window.location.replace(res.ok ? '/people/' : '/login/');
 		}).catch(() => {
 			window.location.replace('/login/');

@@ -2,7 +2,7 @@ import {withUser} from '../../../lib/auth';
 import {db, type MeetingRow, type UserRow} from '../../../lib/db';
 import {isFree} from '../../../lib/meetings';
 import {initials} from '../../../lib/shape';
-import {slotTime} from '../../../lib/slots';
+import {SLOT_TIMES, slotTime} from '../../../lib/slots';
 
 export type PersonCard = {
 	id: number;
@@ -18,7 +18,10 @@ export type PersonCard = {
 };
 
 export default withUser((req, res, user) => {
-	const freeAt = req.query.freeAt ? Number(req.query.freeAt) : null;
+	// Ignore invalid slot ids (crafted or stale URLs) rather than filtering by
+	// a slot that doesn't exist and returning a count that lies.
+	const rawFreeAt = Number(req.query.freeAt);
+	const freeAt = Number.isInteger(rawFreeAt) && rawFreeAt >= 1 && rawFreeAt <= SLOT_TIMES.length ? rawFreeAt : null;
 	const users = db.prepare('SELECT * FROM users ORDER BY name').all() as UserRow[];
 	const live = db.prepare(`
 		SELECT * FROM meetings WHERE status IN ('pending', 'accepted')
