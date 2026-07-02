@@ -23,7 +23,7 @@
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "aws-ses-v2-local": "^2.9.0",
+    "aws-ses-v2-local": "^2.9.2",
     "concurrently": "^10.0.3",
     "eslint": "^9.19.0",
     "eslint-config-domdomegg": "^2.0.8",
