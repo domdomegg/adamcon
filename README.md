@@ -17,27 +17,24 @@ with API routes enabled (Next.js pages router + better-sqlite3).
 1. `npm install`
 2. `npm run seed` — creates the mockup cast and prints a sign-in link per person
 3. `npm start` — dev server (check the port it prints; sign-in links assume
-   `APP_ORIGIN`, default `http://localhost:3000`)
+   `APP_ORIGIN`, default `http://localhost:3000`), plus
+   [aws-ses-v2-local](https://github.com/domdomegg/aws-ses-v2-local) so all
+   emails (magic links included) land in a local inbox at
+   http://localhost:8005 — the production SES code path, pointed at the
+   emulator.
 
-In dev, emails aren't sent: they're logged to the console and appended to
-`data/outbox.jsonl` (including magic links). So to sign in locally, either
-open one of the links `npm run seed` printed, or use the login page with a
-seeded person's email and grab the link from the console/outbox.
-
-To preview the real HTML emails instead, use
-[aws-ses-v2-local](https://github.com/domdomegg/aws-ses-v2-local):
-`npm run emails` (inbox viewer at http://localhost:8005) in one terminal and
-`npm run start:emails` (dev server sending via the emulator) in another. This
-exercises the production SES code path, just pointed at the local endpoint.
+So to sign in locally, either open one of the links `npm run seed` printed,
+or use the login page with a seeded person's email and click the link in the
+local inbox.
 
 ## Configuration (env vars)
 
 | Var | What |
 |---|---|
 | `APP_ORIGIN` | Public origin used in emailed links, e.g. `https://adamcon.adamjones.me` |
-| `EMAIL_FROM` | Set to enable real sending via Amazon SES (default credential chain — in-cluster this is workload identity federation, see `infra/README.md`). Unset = dev outbox |
-| `SES_ENDPOINT` | Point SES at a local emulator (`npm run start:emails` sets it to aws-ses-v2-local). Unset = real SES |
-| `DATA_DIR` | Where `adamcon.db` + `outbox.jsonl` live (default `./data`) |
+| `EMAIL_FROM` | From address for SES sends (default credential chain — in-cluster this is workload identity federation, see `infra/README.md`). `npm start` sets a dev value |
+| `SES_ENDPOINT` | Point SES at a local emulator (`npm start` sets it to aws-ses-v2-local). Unset = real SES |
+| `DATA_DIR` | Where `adamcon.db` lives (default `./data`) |
 | `AIRTABLE_API_KEY` | PAT for the import script (data.records read/write on the AdamCon base) |
 
 ## Onboarding attendees

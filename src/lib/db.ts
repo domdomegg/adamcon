@@ -67,11 +67,6 @@ const open = (): Database.Database => {
 	database.exec(SCHEMA);
 	const seedSlot = database.prepare('INSERT OR IGNORE INTO slots (id, starts) VALUES (?, ?)');
 	SLOT_TIMES.forEach((starts, i) => seedSlot.run(i + 1, starts));
-	// Scrub rows written before validation existed: link_url renders as a raw
-	// href on other attendees' screens (javascript: here was stored XSS) and
-	// photo_url as an img src, so both must match what the API now enforces.
-	database.prepare('UPDATE users SET link_url = \'\' WHERE link_url != \'\' AND link_url NOT LIKE \'http://%\' AND link_url NOT LIKE \'https://%\'').run();
-	database.prepare('UPDATE users SET photo_url = \'\' WHERE photo_url != \'\' AND photo_url NOT LIKE \'/api/photos/%\'').run();
 	return database;
 };
 
