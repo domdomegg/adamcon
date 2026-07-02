@@ -6,8 +6,8 @@
 
 The AdamCon '26 one-to-ones app: profiles → directory → request a 25-minute
 meeting → accept/decline → your day's schedule. All meetings start at the water
-fountain. See `../PLAN.md` for the full design (data model, booking rules,
-email policy, mockups).
+fountain. See [`PLAN.md`](./PLAN.md) for the full design (data model, booking
+rules, email policy).
 
 Built from [typescript-webapp-template](https://github.com/domdomegg/typescript-webapp-template)
 with API routes enabled (Next.js pages router + better-sqlite3).
