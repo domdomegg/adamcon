@@ -48,46 +48,35 @@ const Book = () => {
 	const selectSlot = (slotId: number | null) => {
 		setSelected(slotId);
 		if (slotId !== null) {
-			// Bring the note towards the top of the screen, then focus it. The
-			// note sits near the bottom of the document, so before the
-			// keyboard opens there isn't enough scroll room to get it there —
-			// the keyboard has to create it (interactive-widget:
-			// resizes-content in _app makes the keyboard shrink the viewport
-			// rather than overlay it). So: glide as far as possible, focus
-			// once the scroll has FINISHED (focusing mid-scroll cancels it —
-			// the old "doesn't scroll far enough" bug), and complete the
-			// glide when the keyboard's viewport resize lands.
-			setTimeout(() => {
-				const note = noteRef.current;
-				if (!note) {
-					return;
-				}
+			// Focus synchronously so the keyboard opens with the tap (iOS only
+			// reliably opens it from within the gesture) and start gliding the
+			// note towards the top right away. The note sits near the bottom
+			// of the document, so most of the scroll room only exists once the
+			// keyboard is up (interactive-widget: resizes-content in _app
+			// makes it shrink the viewport rather than overlay it) — so glide
+			// again once the keyboard's viewport resize has settled.
+			const note = noteRef.current;
+			if (!note) {
+				return;
+			}
 
-				const reveal = () => {
-					note.scrollIntoView({behavior: 'smooth', block: 'start'});
-				};
+			note.focus({preventScroll: true});
+			note.scrollIntoView({behavior: 'smooth', block: 'start'});
 
-				let focused = false;
-				const focusNote = () => {
-					if (!focused) {
-						focused = true;
-						window.removeEventListener('scrollend', focusNote);
-						window.visualViewport?.addEventListener('resize', reveal, {once: true});
-						setTimeout(() => window.visualViewport?.removeEventListener('resize', reveal), 1500);
-						note.focus({preventScroll: true});
-					}
-				};
+			let timer: ReturnType<typeof setTimeout>;
+			const glide = () => {
+				window.visualViewport?.removeEventListener('resize', onResize);
+				note.scrollIntoView({behavior: 'smooth', block: 'start'});
+			};
 
-				if ('onscrollend' in window) {
-					window.addEventListener('scrollend', focusNote);
-					// scrollend never fires if there's nothing left to scroll.
-					setTimeout(focusNote, 800);
-					note.scrollIntoView({behavior: 'smooth', block: 'start'});
-				} else {
-					note.scrollIntoView({block: 'start'});
-					focusNote();
-				}
-			}, 50);
+			const onResize = () => {
+				clearTimeout(timer);
+				timer = setTimeout(glide, 120);
+			};
+
+			window.visualViewport?.addEventListener('resize', onResize);
+			// Desktop / keyboard already open: no resize coming, just settle.
+			timer = setTimeout(glide, 400);
 		}
 	};
 
