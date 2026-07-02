@@ -15,15 +15,21 @@ export const createLoginToken = (userId: number): string => {
 	return token;
 };
 
-/** Exchanges a login token for a session token, or null if invalid/expired/used. */
-export const consumeLoginToken = (token: string): string | null => {
-	const row = db.prepare('SELECT user_id, expires_at, used FROM login_tokens WHERE token = ?')
-		.get(token) as {user_id: number; expires_at: number; used: number} | undefined;
-	if (!row || row.used || row.expires_at < now()) {
+const REDEEMED_TOKEN_MINUTES = 10;
+
+/** Exchanges a login token for a session token, or null if invalid/expired. */
+export const redeemLoginToken = (token: string): string | null => {
+	const row = db.prepare('SELECT user_id, expires_at FROM login_tokens WHERE token = ?')
+		.get(token) as {user_id: number; expires_at: number} | undefined;
+	if (!row || row.expires_at < now()) {
 		return null;
 	}
 
-	db.prepare('UPDATE login_tokens SET used = 1 WHERE token = ?').run(token);
+	// Not single-use: email link-scanners prefetch the link, and a consumed
+	// token would lock the actual human out. Instead the first redemption
+	// starts a short fuse, keeping the replay window tight.
+	db.prepare('UPDATE login_tokens SET expires_at = MIN(expires_at, ?) WHERE token = ?')
+		.run(now() + (REDEEMED_TOKEN_MINUTES * 60), token);
 	const session = crypto.randomBytes(24).toString('base64url');
 	db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)')
 		.run(session, row.user_id, now() + (SESSION_DAYS * 24 * 60 * 60));

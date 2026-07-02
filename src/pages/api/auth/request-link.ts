@@ -57,7 +57,7 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
 			template: {
 				heading: 'Sign in',
 				paragraphs: ['Tap the button to sign in to AdamCon. This link is just for you.'],
-				cta: {label: 'Sign in', url: `${appOrigin()}/verify/?token=${token}`},
+				cta: {label: 'Sign in', url: `${appOrigin()}/api/auth/verify/?token=${token}`},
 			},
 		}).catch((error: unknown) => {
 			console.error(`Failed to send sign-in email to user ${user.id}:`, error);

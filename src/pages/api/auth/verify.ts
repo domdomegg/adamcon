@@ -1,24 +1,18 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
-import {consumeLoginToken, sessionCookie} from '../../../lib/auth';
+import {redeemLoginToken, sessionCookie} from '../../../lib/auth';
 
-// Consuming the single-use token requires a POST (from the /verify/ page's
-// button): email link-scanners prefetch GETs, and a scanner eating the token
-// would lock the actual human out.
+// Signs in directly from the emailed GET link — no confirm page needed. Safe
+// against email link-scanners prefetching the link because tokens are
+// redeemable more than once (see redeemLoginToken).
 const handler = (req: NextApiRequest, res: NextApiResponse) => {
-	if (req.method !== 'POST') {
-		// Old emailed links pointed GETs here; send them to the confirm page.
-		res.redirect(`/verify/?token=${encodeURIComponent(String(req.query.token ?? ''))}`);
-		return;
-	}
-
-	const session = consumeLoginToken(String(req.body?.token ?? ''));
+	const session = redeemLoginToken(String(req.query.token ?? ''));
 	if (!session) {
-		res.status(400).json({error: 'expired'});
+		res.redirect('/login/?expired=1');
 		return;
 	}
 
 	res.setHeader('Set-Cookie', sessionCookie(session));
-	res.status(200).json({ok: true});
+	res.redirect('/people/');
 };
 
 export default handler;
