@@ -12,7 +12,7 @@ const inboxFor = (email: string): {label: string; href: string} | null => {
 	// viewer. hostname not localhost so it also works from a phone on the
 	// same network.
 	if (domain === 'example.com') {
-		return {label: 'Open the local inbox', href: `http://${window.location.hostname}:8005/`};
+		return {label: 'Open aws-ses-v2-local', href: `http://${window.location.hostname}:8005/`};
 	}
 
 	if (domain.includes('gmail') || domain.includes('googlemail')) {
