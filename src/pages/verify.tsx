@@ -9,22 +9,27 @@ const Verify = () => {
 	const router = useRouter();
 	const [pending, setPending] = useState(false);
 	const [expired, setExpired] = useState(false);
+	const [error, setError] = useState('');
 
 	const signIn = async () => {
 		setPending(true);
+		setError('');
 		try {
 			const res = await fetch('/api/auth/verify/', {
 				method: 'POST',
 				headers: {'Content-Type': 'application/json'},
 				body: JSON.stringify({token: String(router.query.token ?? '')}),
 			});
-			if (!res.ok) {
-				throw new Error('expired');
+			if (res.ok) {
+				window.location.assign('/people/');
+				return;
 			}
 
-			window.location.assign('/people/');
-		} catch {
+			// Only a definitive server answer means the token is dead — a
+			// network failure on flaky signal just deserves another go.
 			setExpired(true);
+		} catch {
+			setError('Couldn’t reach the server — check your connection and try again.');
 			setPending(false);
 		}
 	};
@@ -41,6 +46,7 @@ const Verify = () => {
 					? (
 						<>
 							<p className='text-[13.5px] text-muted mb-3'>You’re one tap away.</p>
+							{error && <p className='text-brand-dark text-[13px] mb-2'>{error}</p>}
 							<button
 								type='button'
 								onClick={() => {

@@ -1,8 +1,8 @@
 // With trailingSlash: true, slash-less paths cost a 308 round-trip; hit the
 // canonical URL directly.
 const withSlash = (path: string): string => {
-	const [pathname, query] = path.split('?');
-	return `${pathname.endsWith('/') ? pathname : `${pathname}/`}${query ? `?${query}` : ''}`;
+	const [, pathname, rest] = /^([^?#]*)([\s\S]*)$/.exec(path)!;
+	return `${pathname.endsWith('/') ? pathname : `${pathname}/`}${rest}`;
 };
 
 // Browser-side fetch helper. On 401 we bounce to the sign-in page.

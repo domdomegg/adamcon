@@ -2,18 +2,36 @@
 // module-level map is enough; counters reset on restart, which is fine for
 // abuse throttling (this guards email sending, not authentication).
 
-const hits = new Map<string, number[]>();
+type Bucket = {times: number[]; expiresAt: number};
 
-/** Records a hit for the key and returns whether it stays within limit per windowMs. */
-export const allowHit = (key: string, limit: number, windowMs: number): boolean => {
+const buckets = new Map<string, Bucket>();
+
+/**
+ * Checks every window and records the hit in all of them only if all allow
+ * it. Blocked attempts are deliberately not recorded: they must not extend a
+ * lockout, and it bounds each bucket at `limit` entries.
+ */
+export const allowHits = (checks: {key: string; limit: number; windowMs: number}[]): boolean => {
 	const now = Date.now();
-	const recent = (hits.get(key) ?? []).filter((t) => t > now - windowMs);
-	recent.push(now);
-	hits.set(key, recent);
-	if (hits.size > 10_000) {
-		// Safety valve so a scan of many keys can't grow the map unboundedly.
-		hits.clear();
+	const recents = checks.map(({key, windowMs}) => (buckets.get(key)?.times ?? []).filter((t) => t > now - windowMs));
+	if (checks.some(({limit}, i) => recents[i].length >= limit)) {
+		return false;
 	}
 
-	return recent.length <= limit;
+	checks.forEach(({key, windowMs}, i) => {
+		recents[i].push(now);
+		buckets.set(key, {times: recents[i], expiresAt: now + windowMs});
+	});
+
+	if (buckets.size > 10_000) {
+		// Safety valve so a scan of many keys can't grow the map unboundedly;
+		// only expired buckets are dropped, so live limits are unaffected.
+		for (const [key, bucket] of buckets) {
+			if (bucket.expiresAt < now) {
+				buckets.delete(key);
+			}
+		}
+	}
+
+	return true;
 };
