@@ -1,5 +1,3 @@
-import path from 'node:path';
-import fs from 'node:fs';
 import {renderEmailHtml, renderEmailText, type Template} from './emailTemplate';
 
 // Email policy: send only when the recipient must act or their day changed.
@@ -36,24 +34,16 @@ const withRetries = async (send: () => Promise<void>, delays: number[]): Promise
 };
 
 export const sendEmail = async (email: Email): Promise<void> => {
-	if (FROM) {
-		await withRetries(async () => sendViaSes(email), [500, 2000]);
-		return;
+	if (!FROM) {
+		throw new Error('EMAIL_FROM is not set — npm start wires it to aws-ses-v2-local for dev');
 	}
 
-	// Dev mode: log and append to a local outbox instead of sending.
-	const dataDir = process.env.DATA_DIR ?? path.join(process.cwd(), 'data');
-	fs.mkdirSync(dataDir, {recursive: true});
-	fs.appendFileSync(path.join(dataDir, 'outbox.jsonl'), `${JSON.stringify({
-		to: email.to, subject: email.subject, text: renderEmailText(email.template), at: new Date().toISOString(),
-	})}\n`);
-
-	console.log(`[email → ${email.to}] ${email.subject}\n${renderEmailText(email.template)}\n`);
+	await withRetries(async () => sendViaSes(email), [500, 2000]);
 };
 
 const sendViaSes = async (email: Email): Promise<void> => {
 	const {SESv2Client, SendEmailCommand} = await import('@aws-sdk/client-sesv2');
-	// SES_ENDPOINT points at aws-ses-v2-local in dev (npm run start:emails),
+	// SES_ENDPOINT points at aws-ses-v2-local in dev (npm start runs it),
 	// exercising this real code path with a browsable inbox at that URL.
 	const client = new SESv2Client(process.env.SES_ENDPOINT
 		? {
