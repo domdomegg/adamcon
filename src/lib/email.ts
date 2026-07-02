@@ -53,7 +53,13 @@ export const sendEmail = async (email: Email): Promise<void> => {
 
 const sendViaSes = async (email: Email): Promise<void> => {
 	const {SESv2Client, SendEmailCommand} = await import('@aws-sdk/client-sesv2');
-	const client = new SESv2Client({});
+	// SES_ENDPOINT points at aws-ses-v2-local in dev (npm run start:emails),
+	// exercising this real code path with a browsable inbox at that URL.
+	const client = new SESv2Client(process.env.SES_ENDPOINT ? {
+		endpoint: process.env.SES_ENDPOINT,
+		region: 'aws-ses-v2-local',
+		credentials: {accessKeyId: 'ANY_STRING', secretAccessKey: 'ANY_STRING'},
+	} : {});
 	await client.send(new SendEmailCommand({
 		FromEmailAddress: FROM,
 		Destination: {ToAddresses: [email.to]},

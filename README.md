@@ -24,12 +24,19 @@ In dev, emails aren't sent: they're logged to the console and appended to
 open one of the links `npm run seed` printed, or use the login page with a
 seeded person's email and grab the link from the console/outbox.
 
+To preview the real HTML emails instead, use
+[aws-ses-v2-local](https://github.com/domdomegg/aws-ses-v2-local):
+`npm run emails` (inbox viewer at http://localhost:8005) in one terminal and
+`npm run start:emails` (dev server sending via the emulator) in another. This
+exercises the production SES code path, just pointed at the local endpoint.
+
 ## Configuration (env vars)
 
 | Var | What |
 |---|---|
 | `APP_ORIGIN` | Public origin used in emailed links, e.g. `https://adamcon.adamjones.me` |
 | `EMAIL_FROM` | Set to enable real sending via Amazon SES (default credential chain — in-cluster this is workload identity federation, see `infra/README.md`). Unset = dev outbox |
+| `SES_ENDPOINT` | Point SES at a local emulator (`npm run start:emails` sets it to aws-ses-v2-local). Unset = real SES |
 | `DATA_DIR` | Where `adamcon.db` + `outbox.jsonl` live (default `./data`) |
 | `AIRTABLE_API_KEY` | PAT for the import script (data.records read/write on the AdamCon base) |
 
