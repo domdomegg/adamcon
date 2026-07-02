@@ -14,7 +14,10 @@ const App = ({Component, pageProps}: AppProps) => {
 		<>
 			<Head>
 				<title>AdamCon ’26</title>
-				<meta name='viewport' content='width=device-width, initial-scale=1' />
+				{/* resizes-content: the keyboard shrinks the viewport instead of
+				    overlaying it, so focused fields (and the sticky Request
+				    button) stay visible above it. iOS ignores this and pans. */}
+				<meta name='viewport' content='width=device-width, initial-scale=1, interactive-widget=resizes-content' />
 				<meta name='theme-color' content='#e7000b' />
 				<link rel='manifest' href='/manifest.json' />
 			</Head>

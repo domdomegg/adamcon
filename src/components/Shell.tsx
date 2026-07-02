@@ -10,7 +10,7 @@ const TABS = [
 
 const Badge = ({count}: {count: number}) => (count > 0
 	? (
-		<span className='absolute -top-1 right-2 md:static md:ml-1 min-w-[18px] h-[18px] rounded-full bg-brand text-white text-[11px] font-extrabold leading-[18px] text-center px-1 border-2 border-white md:border-0'>
+		<span className='absolute -top-2 right-2 md:static md:ml-1 min-w-[18px] h-[18px] rounded-full bg-brand text-white text-[11px] font-extrabold inline-flex items-center justify-center px-1 border-2 border-white md:border-0'>
 			{count}
 		</span>
 	)

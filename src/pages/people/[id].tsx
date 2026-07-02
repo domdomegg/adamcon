@@ -48,12 +48,35 @@ const Book = () => {
 	const selectSlot = (slotId: number | null) => {
 		setSelected(slotId);
 		if (slotId !== null) {
-			// Glide down to the note and focus it once the scroll has settled,
-			// so mobile keyboards don't cause a jarring double-jump.
-			setTimeout(() => {
-				noteRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'});
-				setTimeout(() => noteRef.current?.focus({preventScroll: true}), 350);
-			}, 50);
+			// Focus synchronously so the keyboard opens with the tap (iOS only
+			// reliably opens it from within the gesture) and start gliding the
+			// note towards the top right away. The note sits near the bottom
+			// of the document, so most of the scroll room only exists once the
+			// keyboard is up (interactive-widget: resizes-content in _app
+			// makes it shrink the viewport rather than overlay it) — so glide
+			// again once the keyboard's viewport resize has settled.
+			const note = noteRef.current;
+			if (!note) {
+				return;
+			}
+
+			note.focus({preventScroll: true});
+			note.scrollIntoView({behavior: 'smooth', block: 'start'});
+
+			let timer: ReturnType<typeof setTimeout>;
+			const glide = () => {
+				window.visualViewport?.removeEventListener('resize', onResize);
+				note.scrollIntoView({behavior: 'smooth', block: 'start'});
+			};
+
+			const onResize = () => {
+				clearTimeout(timer);
+				timer = setTimeout(glide, 120);
+			};
+
+			window.visualViewport?.addEventListener('resize', onResize);
+			// Desktop / keyboard already open: no resize coming, just settle.
+			timer = setTimeout(glide, 400);
 		}
 	};
 
@@ -267,7 +290,7 @@ const Book = () => {
 						onChange={(e) => {
 							setNote(e.target.value);
 						}}
-						className='w-full h-[74px] bg-white border-[1.5px] border-line rounded-xl px-3 py-3 text-[15px] resize-none'
+						className='scroll-mt-24 w-full h-[74px] bg-white border-[1.5px] border-line rounded-xl px-3 py-3 text-[15px] resize-none'
 					/>
 
 					{/* Sticky so the button stays visible above the keyboard while writing the note */}

@@ -101,108 +101,110 @@ const SchedulePage = () => {
 
 			{error && <p className='text-brand-dark text-[13px] mb-3'>{error}</p>}
 
-			<div className='relative pl-16'>
+			<div>
 				{schedule.rows.map((row, i) => (
-					<div key={row.time} className='relative mb-2.5'>
+					<div key={row.time} className='relative flex gap-2.5 mb-2.5'>
 						{i === nowIndex && (
-							<div className='absolute -left-16 right-0 -top-[7px] border-t-2 border-brand z-10'>
+							<div className='absolute inset-x-0 -top-[7px] border-t-2 border-brand z-10'>
 								<span className='absolute -top-[9px] left-0 bg-brand text-white text-[10px] font-extrabold rounded-md px-1.5 py-0.5'>now</span>
 							</div>
 						)}
-						<div className='absolute -left-16 w-[52px] text-right text-[13px] font-bold text-muted pt-3.5'>{row.time}</div>
+						<div className='w-11 shrink-0 text-right text-[13px] font-bold text-muted pt-3.5'>{row.time}</div>
 
-						{row.kind === 'lunch' && (
-							<div className='border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[13px] text-[13.5px] text-muted'>
-								{row.time === '12:30' ? 'Lunch — everyone breaks together' : 'Lunch'}
-							</div>
-						)}
-
-						{(row.kind === 'free' || row.kind === 'blocked') && (
-							<div className={`border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[10px] text-[13.5px] text-muted flex items-center justify-between gap-2 ${row.kind === 'blocked' ? 'opacity-75' : ''}`}>
-								<span>
-									{row.kind === 'free' ? <>Free · <a href={`/people/?freeAt=${row.slotId}`} className='text-brand font-bold'>find someone ›</a></> : 'Blocked'}
-								</span>
-								<Toggle
-									on={row.kind === 'free'}
-									disabled={pending === `toggle-${row.slotId}`}
-									onChange={() => {
-										void toggle(row.slotId!, row.kind === 'blocked');
-									}}
-								/>
-							</div>
-						)}
-
-						{row.kind === 'meeting' && row.meeting && (
-							<a
-								href={`/people/${row.meeting.personId}/?from=schedule`}
-								className='block w-full text-left bg-white border border-line rounded-2xl p-3.5'
-							>
-								<div className='flex items-center gap-3'>
-									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
-									<div className='flex-1 min-w-0'>
-										<div className='font-bold text-[16px]'>{row.meeting.name}</div>
-										<div className='text-[13px] text-muted'>{row.meeting.headline}</div>
-									</div>
-									<span className='text-stone-300 text-[19px] font-bold'>›</span>
+						<div className='flex-1 min-w-0'>
+							{row.kind === 'lunch' && (
+								<div className='border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[13px] text-[13.5px] text-muted'>
+									{row.time === '12:30' ? 'Lunch — everyone breaks together' : 'Lunch'}
 								</div>
-								{row.meeting.note && <p className='text-[12.5px] text-muted mt-2'>“{row.meeting.note}”</p>}
-							</a>
-						)}
+							)}
 
-						{row.kind === 'incoming' && row.meeting && (
-							<div className='bg-tint-soft border-[1.5px] border-brand rounded-2xl p-3.5'>
-								<a href={`/people/${row.meeting.personId}/?from=schedule`} className='flex items-center gap-3'>
-									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
-									<div className='flex-1 min-w-0'>
-										<div className='font-bold text-[16px]'>{row.meeting.name}</div>
-										<div className='text-[13px] text-muted'>wants to meet you</div>
-									</div>
-									<span className='bg-brand text-white text-[11px] font-extrabold uppercase tracking-wide rounded-full px-2.5 py-1'>new</span>
-								</a>
-								{row.meeting.note && <p className='text-[12.5px] text-muted mt-2'>“{row.meeting.note}”</p>}
-								<div className='flex gap-2 mt-3'>
-									<button
-										type='button'
-										disabled={pending !== null}
-										onClick={() => {
-											void act(row.meeting!.id, 'accept');
+							{(row.kind === 'free' || row.kind === 'blocked') && (
+								<div className={`border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[10px] text-[13.5px] text-muted flex items-center justify-between gap-2 ${row.kind === 'blocked' ? 'opacity-75' : ''}`}>
+									<span>
+										{row.kind === 'free' ? <>Free · <a href={`/people/?freeAt=${row.slotId}`} className='text-brand font-bold'>find someone ›</a></> : 'Blocked'}
+									</span>
+									<Toggle
+										on={row.kind === 'free'}
+										disabled={pending === `toggle-${row.slotId}`}
+										onChange={() => {
+											void toggle(row.slotId!, row.kind === 'blocked');
 										}}
-										className='flex-1 bg-accept text-white rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
-									>
-										{pending === `accept-${row.meeting.id}` ? 'Accepting…' : 'Accept'}
-									</button>
-									<button
-										type='button'
-										disabled={pending !== null}
-										onClick={() => {
-											void act(row.meeting!.id, 'decline');
-										}}
-										className='flex-1 bg-stone-100 text-muted rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
-									>
-										{pending === `decline-${row.meeting.id}` ? 'Declining…' : 'Decline'}
-									</button>
+									/>
 								</div>
-							</div>
-						)}
+							)}
 
-						{row.kind === 'outgoing' && row.meeting && (
-							<div className='border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[10px] text-[13.5px] text-muted flex items-center justify-between gap-2'>
-								<a href={`/people/${row.meeting.personId}/?from=schedule`} className='flex items-center gap-2'>
-									<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} size='sm' />
-									You asked {row.meeting.firstName} — waiting
-								</a>
-								<button
-									type='button'
-									disabled={pending !== null}
-									onClick={() => {
-										void act(row.meeting!.id, 'withdraw');
-									}}
-									className='text-brand font-bold text-[13px] disabled:opacity-60'
+							{row.kind === 'meeting' && row.meeting && (
+								<a
+									href={`/people/${row.meeting.personId}/?from=schedule`}
+									className='block w-full text-left bg-white border border-line rounded-2xl p-3.5'
 								>
-									{pending === `withdraw-${row.meeting.id}` ? 'withdrawing…' : 'withdraw'}
-								</button>
-							</div>
-						)}
+									<div className='flex items-center gap-3'>
+										<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
+										<div className='flex-1 min-w-0'>
+											<div className='font-bold text-[16px]'>{row.meeting.name}</div>
+											<div className='text-[13px] text-muted'>{row.meeting.headline}</div>
+										</div>
+										<span className='text-stone-300 text-[19px] font-bold'>›</span>
+									</div>
+									{row.meeting.note && <p className='text-[12.5px] text-muted mt-2'>“{row.meeting.note}”</p>}
+								</a>
+							)}
+
+							{row.kind === 'incoming' && row.meeting && (
+								<div className='bg-tint-soft border-[1.5px] border-brand rounded-2xl p-3.5'>
+									<a href={`/people/${row.meeting.personId}/?from=schedule`} className='flex items-center gap-3'>
+										<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
+										<div className='flex-1 min-w-0'>
+											<div className='font-bold text-[16px]'>{row.meeting.name}</div>
+											<div className='text-[13px] text-muted'>wants to meet you</div>
+										</div>
+										<span className='bg-brand text-white text-[11px] font-extrabold uppercase tracking-wide rounded-full px-2.5 py-1'>new</span>
+									</a>
+									{row.meeting.note && <p className='text-[12.5px] text-muted mt-2'>“{row.meeting.note}”</p>}
+									<div className='flex gap-2 mt-3'>
+										<button
+											type='button'
+											disabled={pending !== null}
+											onClick={() => {
+												void act(row.meeting!.id, 'accept');
+											}}
+											className='flex-1 bg-accept text-white rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
+										>
+											{pending === `accept-${row.meeting.id}` ? 'Accepting…' : 'Accept'}
+										</button>
+										<button
+											type='button'
+											disabled={pending !== null}
+											onClick={() => {
+												void act(row.meeting!.id, 'decline');
+											}}
+											className='flex-1 bg-stone-100 text-muted rounded-[10px] py-2.5 text-sm font-bold disabled:opacity-60'
+										>
+											{pending === `decline-${row.meeting.id}` ? 'Declining…' : 'Decline'}
+										</button>
+									</div>
+								</div>
+							)}
+
+							{row.kind === 'outgoing' && row.meeting && (
+								<div className='border-[1.5px] border-dashed border-line rounded-2xl px-3.5 py-[10px] text-[13.5px] text-muted flex items-center justify-between gap-2'>
+									<a href={`/people/${row.meeting.personId}/?from=schedule`} className='flex items-center gap-2'>
+										<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} size='sm' />
+										You asked {row.meeting.firstName} — waiting
+									</a>
+									<button
+										type='button'
+										disabled={pending !== null}
+										onClick={() => {
+											void act(row.meeting!.id, 'withdraw');
+										}}
+										className='text-brand font-bold text-[13px] disabled:opacity-60'
+									>
+										{pending === `withdraw-${row.meeting.id}` ? 'withdrawing…' : 'withdraw'}
+									</button>
+								</div>
+							)}
+						</div>
 					</div>
 				))}
 			</div>

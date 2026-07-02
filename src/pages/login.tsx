@@ -7,6 +7,14 @@ const REGISTRATION_URL = 'https://adamjones.me/blog/adamcon-2026/';
 
 const inboxFor = (email: string): {label: string; href: string} | null => {
 	const domain = email.split('@')[1]?.toLowerCase() ?? '';
+	// The seeded dev cast is @example.com (a reserved domain, so no real
+	// attendee can have it): their inbox is the local aws-ses-v2-local
+	// viewer. hostname not localhost so it also works from a phone on the
+	// same network.
+	if (domain === 'example.com') {
+		return {label: 'Open aws-ses-v2-local', href: `http://${window.location.hostname}:8005/`};
+	}
+
 	if (domain.includes('gmail') || domain.includes('googlemail')) {
 		return {label: 'Open Gmail', href: 'https://mail.google.com/'};
 	}
