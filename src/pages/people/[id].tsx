@@ -48,13 +48,45 @@ const Book = () => {
 	const selectSlot = (slotId: number | null) => {
 		setSelected(slotId);
 		if (slotId !== null) {
-			// Glide the note to the TOP of the screen (offset by scroll-mt on
-			// the textarea), then focus. Centering put it behind the keyboard
-			// that the focus opens — iOS overlays the bottom half of the screen
-			// without resizing the viewport.
+			// Bring the note towards the top of the screen, then focus it. The
+			// note sits near the bottom of the document, so before the
+			// keyboard opens there isn't enough scroll room to get it there —
+			// the keyboard has to create it (interactive-widget:
+			// resizes-content in _app makes the keyboard shrink the viewport
+			// rather than overlay it). So: glide as far as possible, focus
+			// once the scroll has FINISHED (focusing mid-scroll cancels it —
+			// the old "doesn't scroll far enough" bug), and complete the
+			// glide when the keyboard's viewport resize lands.
 			setTimeout(() => {
-				noteRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
-				setTimeout(() => noteRef.current?.focus({preventScroll: true}), 350);
+				const note = noteRef.current;
+				if (!note) {
+					return;
+				}
+
+				const reveal = () => {
+					note.scrollIntoView({behavior: 'smooth', block: 'start'});
+				};
+
+				let focused = false;
+				const focusNote = () => {
+					if (!focused) {
+						focused = true;
+						window.removeEventListener('scrollend', focusNote);
+						window.visualViewport?.addEventListener('resize', reveal, {once: true});
+						setTimeout(() => window.visualViewport?.removeEventListener('resize', reveal), 1500);
+						note.focus({preventScroll: true});
+					}
+				};
+
+				if ('onscrollend' in window) {
+					window.addEventListener('scrollend', focusNote);
+					// scrollend never fires if there's nothing left to scroll.
+					setTimeout(focusNote, 800);
+					note.scrollIntoView({behavior: 'smooth', block: 'start'});
+				} else {
+					note.scrollIntoView({block: 'start'});
+					focusNote();
+				}
 			}, 50);
 		}
 	};
