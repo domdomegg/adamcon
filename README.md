@@ -15,17 +15,17 @@ with API routes enabled (Next.js pages router + better-sqlite3).
 ## Local development
 
 1. `npm install`
-2. `npm run seed` — creates the mockup cast and prints a sign-in link per person
-3. `npm start` — dev server (check the port it prints; sign-in links assume
+2. `npm start` — dev server (check the port it prints; sign-in links assume
    `APP_ORIGIN`, default `http://localhost:3000`), plus
    [aws-ses-v2-local](https://github.com/domdomegg/aws-ses-v2-local) so all
    emails (magic links included) land in a local inbox at
    http://localhost:8005 — the production SES code path, pointed at the
    emulator.
 
-So to sign in locally, either open one of the links `npm run seed` printed,
-or use the login page with a seeded person's email and click the link in the
-local inbox.
+On first run against an empty database it seeds the mockup cast, printing
+each person's email and a sign-in link. Sign in by opening one of those
+links, or via the login page with a seeded email — the emailed link lands in
+the local inbox.
 
 ## Configuration (env vars)
 
