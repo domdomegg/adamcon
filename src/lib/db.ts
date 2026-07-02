@@ -27,8 +27,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS login_tokens (
 	token TEXT PRIMARY KEY,
 	user_id INTEGER NOT NULL REFERENCES users(id),
-	expires_at INTEGER NOT NULL,
-	used INTEGER NOT NULL DEFAULT 0
+	expires_at INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS slots (
@@ -103,7 +102,7 @@ const seedDevCast = (database: Database.Database) => {
 			const {lastInsertRowid} = insertUser.run(person.email, person.name, person.headline, person.bio, person.link, person.whatsapp);
 			const token = crypto.randomBytes(24).toString('base64url');
 			insertToken.run(token, lastInsertRowid, Math.floor(Date.now() / 1000) + (60 * 60));
-			console.log(`  ${person.name.padEnd(18)} ${person.email.padEnd(20)} ${origin}/verify/?token=${token}`);
+			console.log(`  ${person.name.padEnd(18)} ${person.email.padEnd(20)} ${origin}/api/auth/verify/?token=${token}`);
 		}
 	})();
 };

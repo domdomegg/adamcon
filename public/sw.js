@@ -1,7 +1,7 @@
 // App-shell caching so the app opens instantly on flaky towpath signal.
 // Pages and static assets: cache-first with background refresh.
 // API calls: network-first, falling back to the last cached response.
-const CACHE = 'adamcon-v3';
+const CACHE = 'adamcon-v4';
 
 // Precached so every page navigation (plain MPA links) is served instantly
 // from cache, with a background refresh keeping it current.
@@ -29,7 +29,7 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	// Auth flows must never be cached; /verify/ URLs are single-use tokens.
+	// Auth flows (and the legacy /verify/ redirect) must never be cached.
 	if (url.pathname.startsWith('/api/auth/') || url.pathname.startsWith('/verify/')) {
 		return;
 	}

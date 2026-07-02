@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
 		unoptimized: true,
 	},
 	trailingSlash: true,
+	async redirects() {
+		// Sign-in emails briefly linked to a /verify/ confirm page; keep those
+		// links working (the query string is preserved automatically).
+		return [{source: '/verify', destination: '/api/auth/verify/', permanent: false}];
+	},
 };
 
 export default nextConfig;

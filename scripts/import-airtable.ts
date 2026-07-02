@@ -91,7 +91,7 @@ const main = async () => {
 					`Hi ${name.split(' ')[0]} — AdamCon one-to-one booking is open.`,
 					'Your profile is prefilled from your registration. Sign in, give it a once-over, and start booking 25-minute conversations.',
 				],
-				cta: {label: 'Sign in and see who\'s coming', url: `${appOrigin()}/verify/?token=${token}`},
+				cta: {label: 'Sign in and see who\'s coming', url: `${appOrigin()}/api/auth/verify/?token=${token}`},
 			},
 		});
 
