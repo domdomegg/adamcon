@@ -1,21 +1,19 @@
 # adamcon
 
-**Live at https://adamcon.home.adamjones.me** (homelab k3s; image
-`ghcr.io/domdomegg/adamcon` built by CI on every push to master — restart the
-`adamcon` service via the homelab restart workflow to pick up a new image).
+The app for booking one-to-one conversations at
+[AdamCon '26](https://adamjones.me/blog/adamcon-2026/), a one-day event in
+King's Cross. Everyone attending gets a profile. You browse who else is
+coming, pick a time you're both free, and ask to meet them; they accept or
+decline, and your day fills up into a schedule. Every meeting is 25 minutes
+and starts at the same easy-to-find spot: the water fountain.
 
-The AdamCon '26 one-to-ones app: profiles → directory → request a 25-minute
-meeting → accept/decline → your day's schedule. All meetings start at the water
-fountain.
+**Live at https://adamcon.home.adamjones.me**
 
 <p>
 	<img src=".github/screenshots/schedule.png" width="260" alt="Schedule: the day's timeline with an accepted meeting, an incoming request with Accept/Decline, and availability toggles">
 	<img src=".github/screenshots/people.png" width="260" alt="People: the attendee directory with search and per-person booking status">
 	<img src=".github/screenshots/book.png" width="260" alt="Booking: someone's profile with a WhatsApp button and the mutual-free slot picker">
 </p>
-
-Built from [typescript-webapp-template](https://github.com/domdomegg/typescript-webapp-template)
-with API routes enabled (Next.js pages router + better-sqlite3).
 
 ## Design
 
@@ -66,6 +64,14 @@ the local inbox.
 `npm run import` — idempotently imports the Airtable **2026 People** table
 (match on email), emails each new person a magic-link invite, and ticks the
 invited checkbox back in Airtable. Rerun any time for late signups.
+
+## Tech & deployment
+
+Next.js (pages router) + better-sqlite3, built from
+[typescript-webapp-template](https://github.com/domdomegg/typescript-webapp-template).
+Runs on my homelab Kubernetes cluster: CI builds the
+`ghcr.io/domdomegg/adamcon` image on every push to master, and restarting the
+`adamcon` service via the homelab restart workflow picks up the new image.
 
 ## Before the event
 

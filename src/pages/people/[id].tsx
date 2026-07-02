@@ -48,10 +48,12 @@ const Book = () => {
 	const selectSlot = (slotId: number | null) => {
 		setSelected(slotId);
 		if (slotId !== null) {
-			// Glide down to the note and focus it once the scroll has settled,
-			// so mobile keyboards don't cause a jarring double-jump.
+			// Glide the note to the TOP of the screen (offset by scroll-mt on
+			// the textarea), then focus. Centering put it behind the keyboard
+			// that the focus opens — iOS overlays the bottom half of the screen
+			// without resizing the viewport.
 			setTimeout(() => {
-				noteRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'});
+				noteRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
 				setTimeout(() => noteRef.current?.focus({preventScroll: true}), 350);
 			}, 50);
 		}
@@ -267,7 +269,7 @@ const Book = () => {
 						onChange={(e) => {
 							setNote(e.target.value);
 						}}
-						className='w-full h-[74px] bg-white border-[1.5px] border-line rounded-xl px-3 py-3 text-[15px] resize-none'
+						className='scroll-mt-24 w-full h-[74px] bg-white border-[1.5px] border-line rounded-xl px-3 py-3 text-[15px] resize-none'
 					/>
 
 					{/* Sticky so the button stays visible above the keyboard while writing the note */}
