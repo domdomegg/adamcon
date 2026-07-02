@@ -4,7 +4,8 @@ import {createLoginToken} from '../../../lib/auth';
 import {appOrigin, sendEmail} from '../../../lib/email';
 import {allowHit} from '../../../lib/rateLimit';
 
-const TEN_MINUTES = 10 * 60 * 1000;
+const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
 
 const clientIp = (req: NextApiRequest): string => {
 	const forwarded = req.headers['x-forwarded-for'];
@@ -25,11 +26,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 	}
 
 	// Throttle so this can't be used to flood an attendee's inbox (each send
-	// also costs an SES call). Keyed on the submitted email whether or not
-	// it's registered, so the limit doesn't leak who's registered either.
-	const withinLimits = allowHit(`email:${email.toLowerCase()}`, 3, TEN_MINUTES)
-		&& allowHit(`ip:${clientIp(req)}`, 10, TEN_MINUTES);
-	if (!withinLimits) {
+	// also costs an SES call). By IP only — a per-email limit would let anyone
+	// lock a victim out of sign-in by burning their allowance. Caveat: all
+	// IPv4 traffic arrives via the relay's single IP (socat, no PROXY
+	// protocol), so IPv4 clients share these buckets — keep the limits
+	// crowd-sized. Both windows must record the hit, so no short-circuit.
+	const ip = clientIp(req);
+	const withinBurst = allowHit(`minute:${ip}`, 5, MINUTE);
+	const withinSustained = allowHit(`hour:${ip}`, 20, HOUR);
+	if (!withinBurst || !withinSustained) {
 		res.status(429).json({error: 'Too many sign-in links requested — check your inbox, or try again in a few minutes'});
 		return;
 	}

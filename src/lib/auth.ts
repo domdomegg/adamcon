@@ -30,10 +30,11 @@ export const consumeLoginToken = (token: string): string | null => {
 	return session;
 };
 
-// Secure in production so the session token never rides a plaintext http://
-// request (the ingress redirects to https, but the cookie would already have
-// been sent by then). Omitted in dev, which runs on plain http.
-const cookieFlags = `Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
+// Secure when the app is served over https, so the session token never rides
+// a plaintext http:// request (the ingress redirects to https, but the cookie
+// would already have been sent by then). Keyed on APP_ORIGIN rather than
+// NODE_ENV so local runs — dev server or production build — stay on http.
+const cookieFlags = `Path=/; HttpOnly; SameSite=Lax${process.env.APP_ORIGIN?.startsWith('https:') ? '; Secure' : ''}`;
 
 export const sessionCookie = (session: string): string =>
 	`${SESSION_COOKIE}=${session}; ${cookieFlags}; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;

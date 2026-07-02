@@ -20,7 +20,9 @@ with API routes enabled (Next.js pages router + better-sqlite3).
    `APP_ORIGIN`, default `http://localhost:3000`)
 
 In dev, emails aren't sent: they're logged to the console and appended to
-`data/outbox.jsonl` (including magic links).
+`data/outbox.jsonl` (including magic links). So to sign in locally, either
+open one of the links `npm run seed` printed, or use the login page with a
+seeded person's email and grab the link from the console/outbox.
 
 ## Configuration (env vars)
 
