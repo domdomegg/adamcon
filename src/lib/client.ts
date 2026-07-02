@@ -1,7 +1,17 @@
+// With trailingSlash: true, slash-less paths cost a 308 round-trip; hit the
+// canonical URL directly.
+const withSlash = (path: string): string => {
+	const [, pathname, rest] = /^([^?#]*)([\s\S]*)$/.exec(path)!;
+	return `${pathname.endsWith('/') ? pathname : `${pathname}/`}${rest}`;
+};
+
 // Browser-side fetch helper. On 401 we bounce to the sign-in page.
 export const api = async <T = unknown>(path: string, options?: RequestInit): Promise<T> => {
-	const res = await fetch(path, {
+	const res = await fetch(withSlash(path), {
 		headers: {'Content-Type': 'application/json'},
+		// Fail fast instead of hanging on dead connections — callers reload
+		// authoritative state from the server after any failure.
+		signal: AbortSignal.timeout(10_000),
 		...options,
 	});
 	if (res.status === 401) {

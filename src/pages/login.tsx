@@ -31,6 +31,10 @@ const Login = () => {
 	const inbox = inboxFor(email);
 
 	const submit = async () => {
+		if (sending) {
+			return;
+		}
+
 		setError('');
 		setSending(true);
 		try {

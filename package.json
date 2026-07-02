@@ -8,7 +8,9 @@
     "build": "next build",
     "lint": "eslint",
     "seed": "tsx scripts/seed-dev.ts",
-    "import": "tsx scripts/import-airtable.ts"
+    "import": "tsx scripts/import-airtable.ts",
+    "emails": "aws-ses-v2-local",
+    "start:emails": "EMAIL_FROM=\"AdamCon <adamcon@localhost>\" SES_ENDPOINT=http://localhost:8005 next dev --turbopack"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1078.0",
@@ -23,6 +25,7 @@
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "aws-ses-v2-local": "^2.9.0",
     "eslint": "^9.19.0",
     "eslint-config-domdomegg": "^2.0.8",
     "eslint-config-next": "^16.1.1",

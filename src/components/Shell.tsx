@@ -50,7 +50,7 @@ const Shell = ({children, badgeOverride}: {children: ReactNode; badgeOverride?: 
 
 		let cancelled = false;
 		const load = () => {
-			fetch('/api/schedule')
+			fetch('/api/schedule/')
 				.then(async (res) => (res.ok ? res.json() : null))
 				.then((data: {toAnswer: number} | null) => {
 					if (data && !cancelled) {

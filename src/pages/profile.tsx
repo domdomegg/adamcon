@@ -72,6 +72,7 @@ const Profile = () => {
 	const [me, setMe] = useState<Me | null>(null);
 	const [saved, setSaved] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState('');
 	const [uploading, setUploading] = useState(false);
 	const [photoError, setPhotoError] = useState('');
 	const fileRef = useRef<HTMLInputElement>(null);
@@ -91,13 +92,26 @@ const Profile = () => {
 
 	const save = async () => {
 		setSaving(true);
-		await api('/api/me', {method: 'PUT', body: JSON.stringify(me)});
-		setSaving(false);
-		setSaved(true);
+		setSaveError('');
+		try {
+			await api('/api/me', {method: 'PUT', body: JSON.stringify(me)});
+			setSaved(true);
+		} catch (e) {
+			setSaveError(e instanceof Error ? e.message : 'Something went wrong');
+		} finally {
+			setSaving(false);
+		}
 	};
 
 	const signOut = async () => {
 		await api('/api/auth/signout', {method: 'POST'});
+		// Drop the service worker's caches so the next user of this browser
+		// can't see this account's cached schedule/profile while offline.
+		if ('caches' in window) {
+			const keys = await window.caches.keys();
+			await Promise.all(keys.map(async (key) => window.caches.delete(key)));
+		}
+
 		window.location.assign('/login/');
 	};
 
@@ -201,12 +215,14 @@ const Profile = () => {
 				}}
 			/>
 
+			{saveError && <p className='text-brand-dark text-[13px] mb-2'>{saveError}</p>}
 			<button
 				type='button'
+				disabled={saving}
 				onClick={() => {
 					void save();
 				}}
-				className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold'
+				className='w-full bg-brand text-white rounded-[14px] py-[15px] font-bold disabled:opacity-60'
 			>
 				{saving ? 'Saving…' : (saved ? 'Saved ✓' : 'Save')}
 			</button>
