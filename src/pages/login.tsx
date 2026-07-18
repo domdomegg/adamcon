@@ -3,7 +3,7 @@ import {useRouter} from 'next/router';
 import {api} from '../lib/client';
 import {MailIcon} from '../components/Icons';
 
-const REGISTRATION_URL = 'https://adamjones.me/blog/adamcon-2026/';
+const REGISTRATION_URL = 'https://adamjones.me/blog/adamcon-2026/#apply';
 
 const inboxFor = (email: string): {label: string; href: string} | null => {
 	const domain = email.split('@')[1]?.toLowerCase() ?? '';
