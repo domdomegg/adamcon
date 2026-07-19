@@ -13,7 +13,8 @@ import {appOrigin, sendEmail} from '../src/lib/email';
 
 const BASE_ID = process.env.AIRTABLE_BASE_ID ?? 'appNMfArZZ49tEtzH';
 const TABLE_ID = process.env.AIRTABLE_TABLE_ID ?? 'tblFgTD5bua4ZXvod'; // 2026 People
-const INVITED_FIELD = 'Sent swapcard onboarding email'; // reused as "invited to app"
+const IMPORTED_FIELD = 'Imported to AdamCon app';
+const INVITED_FIELD = 'Sent app onboarding email';
 
 type AirtableRecord = {
 	id: string;
@@ -97,7 +98,7 @@ const main = async () => {
 
 		await airtable(`${BASE_ID}/${TABLE_ID}`, {
 			method: 'PATCH',
-			body: JSON.stringify({records: [{id: record.id, fields: {[INVITED_FIELD]: true}}]}),
+			body: JSON.stringify({records: [{id: record.id, fields: {[IMPORTED_FIELD]: true, [INVITED_FIELD]: true}}]}),
 		});
 		console.log(`+ ${name}: imported and invited`);
 	}
