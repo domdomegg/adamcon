@@ -5,6 +5,7 @@ import {
 import Shell from '../../components/Shell';
 import Avatar from '../../components/Avatar';
 import Loading from '../../components/Loading';
+import PhotoLightbox from '../../components/PhotoLightbox';
 import {ChatIcon, LinkIcon} from '../../components/Icons';
 import {api} from '../../lib/client';
 import type {BookRow} from '../api/people/[id]';
@@ -32,6 +33,7 @@ const Book = () => {
 	const [note, setNote] = useState('');
 	const [error, setError] = useState('');
 	const [pending, setPending] = useState<string | null>(null);
+	const [photoOpen, setPhotoOpen] = useState(false);
 	const noteRef = useRef<HTMLTextAreaElement>(null);
 	const preselected = useRef(false);
 
@@ -156,7 +158,20 @@ const Book = () => {
 
 			<div className='bg-white border border-line rounded-2xl p-3.5 mb-3'>
 				<div className='flex items-center gap-3'>
-					<Avatar id={person.id} initials={person.initials} photoUrl={person.photoUrl} size='lg' />
+					{person.photoUrl
+						? (
+							<button
+								type='button'
+								aria-label={`View ${firstName}’s photo`}
+								className='shrink-0 rounded-full'
+								onClick={() => {
+									setPhotoOpen(true);
+								}}
+							>
+								<Avatar id={person.id} initials={person.initials} photoUrl={person.photoUrl} size='lg' />
+							</button>
+						)
+						: <Avatar id={person.id} initials={person.initials} size='lg' />}
 					<div className='flex-1 min-w-0'>
 						<div className='font-bold text-[19px]'>{person.name}</div>
 						<div className='text-[13px] text-muted'>{person.headline}</div>
@@ -185,6 +200,16 @@ const Book = () => {
 					)}
 				</div>
 			</div>
+
+			{photoOpen && person.photoUrl && (
+				<PhotoLightbox
+					photoUrl={person.photoUrl}
+					name={person.name}
+					onClose={() => {
+						setPhotoOpen(false);
+					}}
+				/>
+			)}
 
 			{error && <p className='text-brand-dark text-[13px] mb-3'>{error}</p>}
 
