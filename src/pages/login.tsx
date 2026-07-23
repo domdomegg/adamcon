@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useRouter} from 'next/router';
 import {api} from '../lib/client';
 import {MailIcon} from '../components/Icons';
@@ -37,6 +37,14 @@ const Login = () => {
 	const [sending, setSending] = useState(false);
 	const [error, setError] = useState('');
 	const inbox = inboxFor(email);
+
+	// Invite links prefill the address: /login/?email=you@example.com
+	useEffect(() => {
+		const prefill = router.query.email;
+		if (typeof prefill === 'string' && prefill) {
+			setEmail((current) => current || prefill);
+		}
+	}, [router.query.email]);
 
 	const submit = async () => {
 		if (sending) {
