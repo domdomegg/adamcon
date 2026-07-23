@@ -33,7 +33,6 @@ export default withUser((req, res, user) => {
 			id: user.id,
 			email: user.email,
 			name: user.name,
-			headline: user.headline,
 			bio: user.bio,
 			linkUrl: user.link_url,
 			whatsapp: user.whatsapp,
@@ -60,11 +59,10 @@ export default withUser((req, res, user) => {
 		// photo_url is deliberately not settable here — only the photo upload
 		// handler writes it, so avatars can't point at arbitrary URLs.
 		db.prepare(`
-			UPDATE users SET name = ?, headline = ?, bio = ?, link_url = ?, whatsapp = ?
+			UPDATE users SET name = ?, bio = ?, link_url = ?, whatsapp = ?
 			WHERE id = ?
 		`).run(
 			name,
-			String(body.headline ?? user.headline).slice(0, 140),
 			String(body.bio ?? user.bio).slice(0, 2000),
 			linkUrl,
 			String(body.whatsapp ?? user.whatsapp).slice(0, 30),

@@ -8,7 +8,6 @@ type Me = {
 	id: number;
 	email: string;
 	name: string;
-	headline: string;
 	bio: string;
 	linkUrl: string;
 	whatsapp: string;
@@ -183,14 +182,6 @@ const Profile = () => {
 				onChange={(name) => {
 					set({name});
 				}}
-			/>
-			<Field
-				label='Headline'
-				value={me.headline}
-				onChange={(headline) => {
-					set({headline});
-				}}
-				note='Why would someone book 25 minutes with you?'
 			/>
 			<Field
 				label='Bio'

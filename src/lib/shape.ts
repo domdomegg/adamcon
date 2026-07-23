@@ -3,7 +3,6 @@ import type {UserRow} from './db';
 export type PublicUser = {
 	id: number;
 	name: string;
-	headline: string;
 	bio: string;
 	linkUrl: string;
 	photoUrl: string;
@@ -25,7 +24,6 @@ export const initials = (name: string): string =>
 export const publicUser = (user: UserRow): PublicUser => ({
 	id: user.id,
 	name: user.name,
-	headline: user.headline,
 	bio: user.bio,
 	linkUrl: user.link_url,
 	photoUrl: user.photo_url,

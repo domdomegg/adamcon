@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY,
 	email TEXT NOT NULL UNIQUE COLLATE NOCASE,
 	name TEXT NOT NULL,
-	headline TEXT NOT NULL DEFAULT '',
 	bio TEXT NOT NULL DEFAULT '',
 	link_url TEXT NOT NULL DEFAULT '',
 	whatsapp TEXT NOT NULL DEFAULT '',
@@ -60,28 +59,28 @@ CREATE INDEX IF NOT EXISTS meetings_by_target ON meetings (target_id, status);
 
 const DEV_CAST = [
 	{
-		name: 'Adam Jones', email: 'adam@example.com', headline: 'Software engineer · host of silly events', bio: 'I\'m the Adam in AdamCon — I organise this thing. This year I\'m hoping to meet people building interesting tools, and to introduce attendees who should obviously already know each other.', link: 'https://adamjones.me', whatsapp: '+44 7911 000001',
+		name: 'Adam Jones', email: 'adam@example.com', bio: 'I\'m the Adam in AdamCon — I organise this thing. This year I\'m hoping to meet people building interesting tools, and to introduce attendees who should obviously already know each other.', link: 'https://adamjones.me', whatsapp: '+44 7911 000001',
 	},
 	{
-		name: 'Priya Kapoor', email: 'priya@example.com', headline: 'Building tools for community organisers', bio: 'Civic tech founder, boulderer, occasional zine-maker.', link: 'https://example.com/priya', whatsapp: '+44 7911 000002',
+		name: 'Priya Kapoor', email: 'priya@example.com', bio: 'Civic tech founder, boulderer, occasional zine-maker.', link: 'https://example.com/priya', whatsapp: '+44 7911 000002',
 	},
 	{
-		name: 'Tom Okafor', email: 'tom@example.com', headline: 'Narrowboat liveaboard · ex-fintech', bio: 'Sold his flat in 2023, bought The Drifting Ledger, and has strong opinions about mooring politics and interchange fees. Ask him about either.', link: 'https://linkedin.com/in/tomokafor', whatsapp: '+44 7911 000003',
+		name: 'Tom Okafor', email: 'tom@example.com', bio: 'Sold his flat in 2023, bought The Drifting Ledger, and has strong opinions about mooring politics and interchange fees. Ask him about either.', link: 'https://linkedin.com/in/tomokafor', whatsapp: '+44 7911 000003',
 	},
 	{
-		name: 'Marta Reyes', email: 'marta@example.com', headline: 'Biosecurity researcher, terrible juggler', bio: 'Works on lab safety policy. Learning to juggle, badly.', link: '', whatsapp: '+44 7911 000004',
+		name: 'Marta Reyes', email: 'marta@example.com', bio: 'Works on lab safety policy. Learning to juggle, badly.', link: '', whatsapp: '+44 7911 000004',
 	},
 	{
-		name: 'Jonty Whitehouse', email: 'jonty@example.com', headline: 'Making museums less boring', bio: 'Exhibition designer and amateur theatre nerd.', link: '', whatsapp: '',
+		name: 'Jonty Whitehouse', email: 'jonty@example.com', bio: 'Exhibition designer and amateur theatre nerd.', link: '', whatsapp: '',
 	},
 	{
-		name: 'Sasha Dubrovsky', email: 'sasha@example.com', headline: 'Robotics PhD · pun enthusiast', bio: 'Builds robot arms; collects terrible puns.', link: '', whatsapp: '+44 7911 000006',
+		name: 'Sasha Dubrovsky', email: 'sasha@example.com', bio: 'Builds robot arms; collects terrible puns.', link: '', whatsapp: '+44 7911 000006',
 	},
 	{
-		name: 'Elena Fontaine', email: 'elena@example.com', headline: 'Chef turned climate founder', bio: 'Ran a kitchen for a decade, now fighting food waste at scale. Wild swimmer.', link: '', whatsapp: '+44 7911 000007',
+		name: 'Elena Fontaine', email: 'elena@example.com', bio: 'Ran a kitchen for a decade, now fighting food waste at scale. Wild swimmer.', link: '', whatsapp: '+44 7911 000007',
 	},
 	{
-		name: 'Rafael Braga', email: 'rafael@example.com', headline: 'Teaches maths, writes musicals', bio: 'Secondary school maths teacher with a musical about Euler in progress.', link: '', whatsapp: '',
+		name: 'Rafael Braga', email: 'rafael@example.com', bio: 'Secondary school maths teacher with a musical about Euler in progress.', link: '', whatsapp: '',
 	},
 ];
 
@@ -89,8 +88,8 @@ const DEV_CAST = [
 const seedDevCast = (database: Database.Database) => {
 	const origin = process.env.APP_ORIGIN ?? 'http://localhost:3000';
 	const insertUser = database.prepare(`
-		INSERT INTO users (email, name, headline, bio, link_url, whatsapp)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO users (email, name, bio, link_url, whatsapp)
+		VALUES (?, ?, ?, ?, ?)
 	`);
 	// Same shape as createLoginToken in auth.ts, which can't be imported here
 	// without a dependency cycle.
@@ -99,7 +98,7 @@ const seedDevCast = (database: Database.Database) => {
 	console.log('Empty dev database — seeding the mockup cast:');
 	database.transaction(() => {
 		for (const person of DEV_CAST) {
-			const {lastInsertRowid} = insertUser.run(person.email, person.name, person.headline, person.bio, person.link, person.whatsapp);
+			const {lastInsertRowid} = insertUser.run(person.email, person.name, person.bio, person.link, person.whatsapp);
 			const token = crypto.randomBytes(24).toString('base64url');
 			insertToken.run(token, lastInsertRowid, Math.floor(Date.now() / 1000) + (60 * 60));
 			console.log(`  ${person.name.padEnd(18)} ${person.email.padEnd(20)} ${origin}/api/auth/verify/?token=${token}`);
@@ -135,7 +134,6 @@ export type UserRow = {
 	id: number;
 	email: string;
 	name: string;
-	headline: string;
 	bio: string;
 	link_url: string;
 	whatsapp: string;

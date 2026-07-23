@@ -142,7 +142,6 @@ const SchedulePage = () => {
 										<Avatar id={row.meeting.personId} initials={row.meeting.initials} photoUrl={row.meeting.photoUrl} />
 										<div className='flex-1 min-w-0'>
 											<div className='font-bold text-[16px]'>{row.meeting.name}</div>
-											<div className='text-[13px] text-muted'>{row.meeting.headline}</div>
 										</div>
 										<span className='text-stone-300 text-[19px] font-bold'>›</span>
 									</div>

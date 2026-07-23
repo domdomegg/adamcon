@@ -7,7 +7,6 @@ import {SLOT_TIMES, slotTime} from '../../../lib/slots';
 export type PersonCard = {
 	id: number;
 	name: string;
-	headline: string;
 	bio: string;
 	photoUrl: string;
 	initials: string;
@@ -38,7 +37,6 @@ export default withUser((req, res, user) => {
 			return {
 				id: u.id,
 				name: u.name,
-				headline: u.headline,
 				bio: u.bio,
 				photoUrl: u.photo_url,
 				initials: initials(u.name),

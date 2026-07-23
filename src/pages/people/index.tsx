@@ -50,7 +50,7 @@ const People = () => {
 			return people ?? [];
 		}
 
-		return (people ?? []).filter((p) => `${p.name} ${p.headline} ${p.bio}`.toLowerCase().includes(q));
+		return (people ?? []).filter((p) => `${p.name} ${p.bio}`.toLowerCase().includes(q));
 	}, [people, query]);
 
 	const personHref = (person: PersonCard) =>
@@ -116,7 +116,6 @@ const People = () => {
 								</a>
 								{person.isMe && <span className='text-muted text-[12.5px] font-semibold'> · you</span>}
 							</div>
-							<div className='text-[13px] text-muted'>{person.headline}</div>
 						</div>
 						{person.isMe || person.status === 'none'
 							? (

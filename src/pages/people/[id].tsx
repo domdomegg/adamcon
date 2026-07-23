@@ -174,7 +174,6 @@ const Book = () => {
 						: <Avatar id={person.id} initials={person.initials} size='lg' />}
 					<div className='flex-1 min-w-0'>
 						<div className='font-bold text-[19px]'>{person.name}</div>
-						<div className='text-[13px] text-muted'>{person.headline}</div>
 					</div>
 				</div>
 				{person.bio && (

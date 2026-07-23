@@ -13,7 +13,6 @@ export type ScheduleRow = {
 		personId: number;
 		name: string;
 		firstName: string;
-		headline: string;
 		photoUrl: string;
 		initials: string;
 		waLink: string | null;
@@ -78,7 +77,6 @@ export default withUser((req, res, user) => {
 				personId: other.id,
 				name: other.name,
 				firstName: other.name.split(' ')[0],
-				headline: other.headline,
 				photoUrl: other.photo_url,
 				initials: initials(other.name),
 				waLink: waLink(other.whatsapp),
