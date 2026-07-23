@@ -183,17 +183,17 @@ const Book = () => {
 						<p className='text-[12.5px] whitespace-pre-line'>{person.bio}</p>
 					</>
 				)}
-				<div className='flex items-center justify-between mt-2.5'>
+				<div className='flex items-center justify-between gap-3 mt-2.5'>
 					{person.linkUrl
 						? (
-							<a href={person.linkUrl} className='flex items-center gap-1.5 text-sm font-semibold text-brand' target='_blank' rel='noreferrer'>
-								<LinkIcon className='w-[15px] h-[15px]' />
-								{prettyLink(person.linkUrl)}
+							<a href={person.linkUrl} className='flex min-w-0 items-center gap-1.5 text-sm font-semibold text-brand' target='_blank' rel='noreferrer'>
+								<LinkIcon className='w-[15px] h-[15px] shrink-0' />
+								<span className='truncate'>{prettyLink(person.linkUrl)}</span>
 							</a>
 						)
 						: <span />}
 					{person.waLink && (
-						<a href={person.waLink} className='inline-flex items-center gap-1.5 bg-[#25d366] text-white rounded-[10px] px-3.5 py-2 text-[13.5px] font-bold' target='_blank' rel='noreferrer'>
+						<a href={person.waLink} className='inline-flex shrink-0 items-center gap-1.5 bg-[#25d366] text-white rounded-[10px] px-3.5 py-2 text-[13.5px] font-bold' target='_blank' rel='noreferrer'>
 							<ChatIcon className='w-[15px] h-[15px]' />
 							WhatsApp
 						</a>
