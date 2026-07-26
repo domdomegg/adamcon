@@ -65,6 +65,10 @@ the local inbox.
 (match on email), emails each new person a magic-link invite, and ticks the
 invited checkbox back in Airtable. Rerun any time for late signups.
 
+The longer invite actually sent to the 2026 cohort — sign in, add a photo, book
+conversations — is in [`docs/invite-email.md`](docs/invite-email.md); send that
+by hand to anyone onboarded after the bulk send.
+
 ## Tech & deployment
 
 Next.js (pages router) + better-sqlite3, built from
