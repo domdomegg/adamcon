@@ -1,31 +1,6 @@
 import {withUser} from '../../lib/auth';
 import {db} from '../../lib/db';
-import {initials} from '../../lib/shape';
-
-/**
- * Profile links render as raw hrefs on other attendees' screens, so only
- * http(s) is allowed (a javascript: URL here would be stored XSS). Bare
- * domains get https:// prepended; anything else is rejected.
- */
-const cleanLinkUrl = (value: string): string | null => {
-	const trimmed = value.trim();
-	if (!trimmed) {
-		return '';
-	}
-
-	for (const candidate of [trimmed, `https://${trimmed}`]) {
-		try {
-			const url = new URL(candidate);
-			if (url.protocol === 'http:' || url.protocol === 'https:') {
-				return candidate;
-			}
-		} catch {
-			// Try the next candidate.
-		}
-	}
-
-	return null;
-};
+import {cleanLinkUrl, initials} from '../../lib/shape';
 
 export default withUser((req, res, user) => {
 	if (req.method === 'GET') {

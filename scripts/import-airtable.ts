@@ -10,6 +10,7 @@
 import {db, type UserRow} from '../src/lib/db';
 import {createLoginToken} from '../src/lib/auth';
 import {appOrigin, sendEmail} from '../src/lib/email';
+import {cleanLinkUrl} from '../src/lib/shape';
 
 const BASE_ID = process.env.AIRTABLE_BASE_ID ?? 'appNMfArZZ49tEtzH';
 const TABLE_ID = process.env.AIRTABLE_TABLE_ID ?? 'tblFgTD5bua4ZXvod'; // 2026 People
@@ -70,6 +71,16 @@ const main = async () => {
 		}
 
 		const bio = String(f['Combined Bio'] ?? '').trim();
+		// Free-text registration answer: people write "alexkingsley.xyz" as often
+		// as a full URL, and a scheme-less href resolves relative to the profile
+		// page. Drop anything that isn't a usable http(s) link rather than
+		// storing a broken one.
+		const rawLink = String(f['LinkedIn or website explaining who you are'] ?? '');
+		const link = cleanLinkUrl(rawLink);
+		if (link === null) {
+			console.log(`  ${name}: ignoring unusable link ${JSON.stringify(rawLink.trim())}`);
+		}
+
 		const {lastInsertRowid} = db.prepare(`
 			INSERT INTO users (email, name, bio, link_url, whatsapp, airtable_record_id)
 			VALUES (?, ?, ?, ?, ?, ?)
@@ -77,7 +88,7 @@ const main = async () => {
 			email,
 			name,
 			bio,
-			String(f['LinkedIn or website explaining who you are'] ?? '').trim(),
+			link ?? '',
 			String(f['WhatsApp number'] ?? '').trim(),
 			record.id,
 		);
