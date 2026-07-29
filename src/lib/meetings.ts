@@ -1,7 +1,7 @@
 import {
 	db, LIVE, type MeetingRow, type UserRow,
 } from './db';
-import {appOrigin, sendEmail} from './email';
+import {appOrigin, sendEmail, type Email} from './email';
 import {slotTime} from './slots';
 
 const liveIn = `('${LIVE.join('\', \'')}')`;
@@ -136,21 +136,46 @@ export const answerRequest = (
 	const target = getUser(meeting.target_id)!;
 	const time = slotTime(meeting.slot_id);
 
-	// Emails only for cancellations — your day changed and you may want to
-	// rebook. Accepts show up on the schedule; declines and withdrawals
-	// stay silent by design.
-	if (action === 'cancel') {
-		const other = user.id === requester.id ? target : requester;
-		sendEmail({
-			to: other.email,
-			subject: `Your ${time} AdamCon meeting was cancelled`,
+	// Every answer emails the requester with the natural next action: an
+	// accept confirms the time and nudges booking more, a decline points at
+	// rebooking, a cancellation reopens the slot. Only withdrawals are
+	// silent — the requester changed their own mind.
+	const email: Email | null = action === 'accept'
+		? {
+			to: requester.email,
+			subject: `${target.name} accepted — you're meeting at ${time}`,
 			template: {
-				heading: `Your ${time} meeting was cancelled`,
-				paragraphs: [`${user.name} cancelled your ${time} meeting. The slot is open again if you want to rebook it.`],
-				cta: {label: 'Find someone for the slot', url: `${appOrigin()}/people/`},
+				heading: `${target.name} accepted`,
+				highlight: `${time} · Sat 1 Aug`,
+				paragraphs: [`Your ${time} is booked. Keep going — your day has room for more.`],
+				cta: {label: 'Book more meetings', url: `${appOrigin()}/people/`},
 			},
-		}).catch((error: unknown) => {
-			console.error(`Failed to send cancellation email for meeting ${meetingId}:`, error);
+		}
+		: action === 'decline'
+			? {
+				to: requester.email,
+				subject: `${target.name} can't do ${time}`,
+				template: {
+					heading: `${target.name} declined your ${time} request`,
+					paragraphs: [`That slot is free for you again. Try ${target.name} at a different time, or find someone else for it.`],
+					cta: {label: 'Pick another time', url: `${appOrigin()}/people/${target.id}/`},
+				},
+			}
+			: action === 'cancel'
+				? {
+					to: (user.id === requester.id ? target : requester).email,
+					subject: `Your ${time} AdamCon meeting was cancelled`,
+					template: {
+						heading: `Your ${time} meeting was cancelled`,
+						paragraphs: [`${user.name} cancelled your ${time} meeting. The slot is open again if you want to rebook it.`],
+						cta: {label: 'Find someone for the slot', url: `${appOrigin()}/people/`},
+					},
+				}
+				: null;
+
+	if (email) {
+		sendEmail(email).catch((error: unknown) => {
+			console.error(`Failed to send ${action} email for meeting ${meetingId}:`, error);
 		});
 	}
 

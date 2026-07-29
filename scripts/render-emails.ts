@@ -28,10 +28,21 @@ const SAMPLES: Record<string, Template> = {
 		highlight: '12:00 · Sat 1 Aug',
 		cta: {label: 'Answer on your schedule', url: 'https://adamcon.adamjones.me/schedule/'},
 	},
+	'4-accepted': {
+		heading: 'Tom Okafor accepted',
+		highlight: '12:00 · Sat 1 Aug',
+		paragraphs: ['Your 12:00 is booked. Keep going — your day has room for more.'],
+		cta: {label: 'Book more meetings', url: 'https://adamcon.adamjones.me/people/'},
+	},
 	'5-cancelled': {
 		heading: 'Your 14:00 meeting was cancelled',
 		paragraphs: ['Tom Okafor cancelled your 14:00 meeting. The slot is open again if you want to rebook it.'],
 		cta: {label: 'Find someone for the slot', url: 'https://adamcon.adamjones.me/people/'},
+	},
+	'6-declined': {
+		heading: 'Tom Okafor declined your 12:00 request',
+		paragraphs: ['That slot is free for you again. Try Tom Okafor at a different time, or find someone else for it.'],
+		cta: {label: 'Pick another time', url: 'https://adamcon.adamjones.me/people/3/'},
 	},
 };
 

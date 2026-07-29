@@ -27,8 +27,9 @@ and starts at the same easy-to-find spot: the water fountain.
   reopens); max one live meeting or request per pair. Blocking a booked slot
   is impossible by construction — a booked row *is* the meeting.
 - **Emails only when the recipient must act or their day changed**: invite,
-  sign-in link, incoming request, cancellation. Accepts, declines and
-  withdrawals are silent — the schedule is the confirmation.
+  sign-in link, incoming request, accept (with a nudge to book more),
+  decline (with a nudge to pick another time), cancellation. Withdrawals are
+  silent — the requester changed their own mind.
 - **Deliberately not built**: tags, filters, chat (WhatsApp deep links cover
   it), a feed, settings, self-serve signup (accounts exist only via the
   Airtable import), realtime (60-second poll), native apps (a service worker

@@ -1,9 +1,10 @@
 import {renderEmailHtml, renderEmailText, type Template} from './emailTemplate';
 
 // Email policy: send only when the recipient must act or their day changed.
-// Invite, sign-in link, each incoming request (with its details), and
-// cancellation. Accepts show up on the schedule; declines and withdrawals
-// send nothing. The morning-of schedule email is a separate script (README).
+// Invite, sign-in link, each incoming request (with its details), accept
+// (book more), decline (rebook another time), and cancellation. Withdrawals
+// send nothing — the requester changed their own mind. The morning-of
+// schedule email is a separate script (README).
 
 export type Email = {
 	to: string;
